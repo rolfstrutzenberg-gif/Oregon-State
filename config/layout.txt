@@ -89,6 +89,8 @@ Voice
 
 ━━ 👑｜MANAGEMENT ━━
 「💼」management-chat
+「🗂️」case-files
+「📁」cases
 「👑」executive-chat
 「📊」staff-decisions
 「🗳️」votes

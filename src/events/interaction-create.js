@@ -2,7 +2,31 @@ const { Events } = require("discord.js");
 const { findAcceptanceByDiscordUserId, saveAcceptance } = require("../services/rules-acceptance-store");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
 const { grantFullAccess } = require("../services/onboarding-service");
+const {
+  createAccessRequest,
+  findAccessRequest,
+  hasApprovedAccess,
+  incidentsForUser,
+  findCaseFile,
+  updateAccessRequest,
+} = require("../services/case-file-service");
+const { findTicketByChannelId } = require("../services/ticket-service");
+const { isLogExemptUser } = require("../services/log-exemption-service");
 const { createLogger } = require("../utils/logger");
+const {
+  CASE_DASHBOARD_RECENT_ID,
+  CASE_DASHBOARD_REQUESTS_ID,
+  CASE_DASHBOARD_SEARCH_ID,
+  CASE_FILE_APPROVE_PREFIX,
+  CASE_FILE_DENY_PREFIX,
+  CASE_FILE_REQUEST_ID,
+  CASE_FILE_REQUEST_MODAL_ID,
+  CASE_FILE_REQUEST_REASON_ID,
+  CASE_FILE_VIEW_ID,
+  createAccessRequestMessage,
+  createCaseFileRequestModal,
+  createCaseFileSummaryMessage,
+} = require("../utils/case-file-ui");
 const {
   RULES_ACCEPT_BUTTON_ID,
   RULES_DISCORD_BUTTON_ID,
@@ -14,9 +38,192 @@ const { syncMemberSelfRoles } = require("../services/self-roles-service");
 
 const logger = createLogger("interaction");
 
+function resolveManagementMembers(guild) {
+  const managementRole = process.env.MANAGEMENT_ROLE_ID
+    ? guild.roles.cache.get(process.env.MANAGEMENT_ROLE_ID)
+    : guild.roles.cache.find((role) => ["➟ Management", "➟ Senior Management"].includes(role.name));
+
+  if (!managementRole) {
+    return [];
+  }
+
+  return managementRole.members.filter((member) => !member.user.bot);
+}
+
+async function notifyCaseFileRequest(interaction, request) {
+  const guild = interaction.guild;
+  await guild.roles.fetch().catch(() => null);
+  const onlineManagement = resolveManagementMembers(guild);
+  const recipients = onlineManagement.size > 0
+    ? [...onlineManagement.values()]
+    : [process.env.OWNER_USER_ID ? await interaction.client.users.fetch(process.env.OWNER_USER_ID).catch(() => null) : null].filter(Boolean);
+
+  const message = createAccessRequestMessage(request);
+  for (const recipient of recipients) {
+    await recipient.send(message).catch(() => null);
+  }
+}
+
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_SEARCH_ID) {
+      await interaction.reply({
+        content: "Search modal is next in the refinement pass. For now, use ticket case-file controls.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_RECENT_ID) {
+      await interaction.reply({
+        content: "Recent case file summaries are next in the refinement pass.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_REQUESTS_ID) {
+      await interaction.reply({
+        content: "Access request queue is active via management DMs. Dashboard queue view comes next.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_FILE_REQUEST_ID) {
+      const ticket = findTicketByChannelId(interaction.channelId);
+      if (!ticket) {
+        await interaction.reply({
+          content: "This button only works inside an open ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.showModal(createCaseFileRequestModal());
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === CASE_FILE_REQUEST_MODAL_ID) {
+      const ticket = findTicketByChannelId(interaction.channelId);
+      if (!ticket) {
+        await interaction.reply({
+          content: "This request is not attached to an open ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const targetUser = await interaction.client.users.fetch(ticket.targetUserId);
+      const reason = interaction.fields.getTextInputValue(CASE_FILE_REQUEST_REASON_ID);
+      const request = createAccessRequest({
+        ticketId: ticket.ticketId,
+        ticketChannelId: ticket.channelId,
+        targetUser,
+        requesterUser: interaction.user,
+        reason,
+      });
+
+      await notifyCaseFileRequest(interaction, request);
+
+      await interaction.reply({
+        content: "Case file access request sent to management.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_FILE_VIEW_ID) {
+      const ticket = findTicketByChannelId(interaction.channelId);
+      if (!ticket) {
+        await interaction.reply({
+          content: "This button only works inside an open ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (!hasApprovedAccess(ticket.ticketId, interaction.user.id)) {
+        await interaction.reply({
+          content: "Case file access has not been approved for this ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const caseFile = findCaseFile(ticket.targetUserId);
+      if (!caseFile) {
+        await interaction.reply({
+          content: "No case file exists for this member yet.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.reply({
+        ...createCaseFileSummaryMessage({
+          caseFile,
+          incidents: incidentsForUser(ticket.targetUserId),
+        }),
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(CASE_FILE_APPROVE_PREFIX)) {
+      const requestId = interaction.customId.slice(CASE_FILE_APPROVE_PREFIX.length);
+      const request = findAccessRequest(requestId);
+      if (!request) {
+        await interaction.reply({ content: "Access request not found.", ephemeral: true });
+        return;
+      }
+
+      const exempt = await isLogExemptUser(interaction.guild, request.targetUserId);
+      const updated = updateAccessRequest(requestId, {
+        status: "Approved",
+        approvedByUserId: interaction.user.id,
+        approvedByTag: interaction.user.tag,
+        logExempt: exempt,
+      });
+
+      const ticketChannel = await interaction.client.channels.fetch(updated.ticketChannelId).catch(() => null);
+      if (ticketChannel?.isTextBased()) {
+        await ticketChannel.send({
+          content: `<@${updated.requesterUserId}> case file access approved. Use \`View Case File\` in staff controls.`,
+          allowedMentions: { users: [updated.requesterUserId] },
+        }).catch(() => null);
+      }
+
+      await interaction.reply({ content: `Approved ${requestId}.`, ephemeral: true });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(CASE_FILE_DENY_PREFIX)) {
+      const requestId = interaction.customId.slice(CASE_FILE_DENY_PREFIX.length);
+      const request = updateAccessRequest(requestId, {
+        status: "Denied",
+        approvedByUserId: interaction.user.id,
+        approvedByTag: interaction.user.tag,
+      });
+
+      if (!request) {
+        await interaction.reply({ content: "Access request not found.", ephemeral: true });
+        return;
+      }
+
+      const ticketChannel = await interaction.client.channels.fetch(request.ticketChannelId).catch(() => null);
+      if (ticketChannel?.isTextBased()) {
+        await ticketChannel.send({
+          content: `<@${request.requesterUserId}> case file access denied.`,
+          allowedMentions: { users: [request.requesterUserId] },
+        }).catch(() => null);
+      }
+
+      await interaction.reply({ content: `Denied ${requestId}.`, ephemeral: true });
+      return;
+    }
+
     if (interaction.isButton() && interaction.customId === RULES_DISCORD_BUTTON_ID) {
       await interaction.reply({
         ...createRulesDetailMessage("discord"),

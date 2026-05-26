@@ -14,5 +14,13 @@
     "mentionable": false,
     "permissions": [],
     "notes": "Supplemental onboarding role for verified members who still need to accept the rules."
+  },
+  {
+    "name": "➟ Testing",
+    "color": "#95A5A6",
+    "hoist": false,
+    "mentionable": false,
+    "permissions": [],
+    "notes": "Members with this role are excluded from moderation/case logging during testing."
   }
 ]
