@@ -52,7 +52,7 @@ The repo now includes a Vercel-ready portal in `verification-portal/`.
 Use a Vercel deployment URL like this as the Roblox OAuth redirect URI:
 
 ```text
-https://your-project.vercel.app/api/roblox/callback
+https://oregon-state-verification.vercel.app/api/roblox/callback
 ```
 
 ## Roblox Data To Store

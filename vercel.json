@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "verification-portal/api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "routes": [
     {
       "src": "/",

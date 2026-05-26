@@ -16,7 +16,7 @@ Set these in the Vercel project settings:
 ```text
 ROBLOX_OAUTH_CLIENT_ID=
 ROBLOX_OAUTH_CLIENT_SECRET=
-ROBLOX_OAUTH_REDIRECT_URI=https://your-project.vercel.app/api/roblox/callback
+ROBLOX_OAUTH_REDIRECT_URI=https://oregon-state-verification.vercel.app/api/roblox/callback
 ROBLOX_OAUTH_SCOPES=openid profile
 SUCCESS_REDIRECT_URL=
 BOT_VERIFICATION_CALLBACK_URL=
@@ -28,7 +28,7 @@ BOT_VERIFICATION_CALLBACK_SECRET=
 Use this redirect URI in the Roblox OAuth app:
 
 ```text
-https://your-project.vercel.app/api/roblox/callback
+https://oregon-state-verification.vercel.app/api/roblox/callback
 ```
 
 ## Current Limitation
