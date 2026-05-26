@@ -1,0 +1,5 @@
+module.exports = async function handler(request, response) {
+  response.statusCode = 200;
+  response.setHeader("content-type", "application/json; charset=utf-8");
+  response.end(JSON.stringify({ ok: true, service: "osrp-verification-portal" }));
+};

@@ -29,6 +29,7 @@ To finish live Roblox verification, we still need:
 - Roblox OAuth app client secret
 - Roblox OAuth redirect URI
 - a public verification portal URL that Roblox can redirect back to
+- a signed Discord handoff so the portal knows which Discord user is verifying
 
 ## Recommended Flow
 
@@ -38,6 +39,21 @@ To finish live Roblox verification, we still need:
 4. Portal receives Roblox user info.
 5. Portal writes the verified Roblox identity back to the bot datastore.
 6. Bot grants verified roles and logs the verification event.
+
+## Portal Scaffold
+
+The repo now includes a Vercel-ready portal in `verification-portal/`.
+
+- `/` starts Roblox OAuth.
+- `/api/roblox/start` starts Roblox OAuth.
+- `/api/roblox/callback` receives the Roblox callback.
+- `/api/health` checks that the portal is online.
+
+Use a Vercel deployment URL like this as the Roblox OAuth redirect URI:
+
+```text
+https://your-project.vercel.app/api/roblox/callback
+```
 
 ## Roblox Data To Store
 

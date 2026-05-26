@@ -1,0 +1,16 @@
+{
+  "name": "osrp-verification-portal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Roblox OAuth verification portal for Oregon State Roleplay.",
+  "scripts": {
+    "dev": "vercel dev",
+    "check": "node --check api/roblox/start.js && node --check api/roblox/callback.js && node --check api/health.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  }
+}
