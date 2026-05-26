@@ -40,6 +40,36 @@ function findCaseFile(userId) {
   return readCaseFiles().find((file) => file.userId === userId) || null;
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[<@!>&]/g, "")
+    .toLowerCase();
+}
+
+function searchCaseFiles(query, limit = 8) {
+  const search = normalizeSearchText(query);
+  if (!search) {
+    return [];
+  }
+
+  return readCaseFiles()
+    .filter((file) => {
+      const fields = [
+        file.caseFileId,
+        file.userId,
+        file.username,
+        file.tag,
+        file.displayName,
+        file.robloxUserId,
+        file.robloxUsername,
+      ];
+
+      return fields.some((field) => normalizeSearchText(field).includes(search));
+    })
+    .slice(0, limit);
+}
+
 function updateCaseFile(userId, patch) {
   const caseFiles = readCaseFiles();
   const caseFile = caseFiles.find((file) => file.userId === userId);
@@ -174,7 +204,7 @@ function syncCaseFilesFromMembers(members, priorityUserIds = []) {
   return synced;
 }
 
-function addIncident({ targetUser, moderatorUser, type, reason, evidence = null, ticketId = null }) {
+function addIncident({ targetUser, moderatorUser, type, reason, evidence = null, ticketId = null, status = "Open" }) {
   const caseFile = ensureCaseFile(targetUser);
   const incidents = readIncidents();
   const now = new Date().toISOString();
@@ -186,7 +216,7 @@ function addIncident({ targetUser, moderatorUser, type, reason, evidence = null,
     moderatorUserId: moderatorUser.id,
     moderatorTag: moderatorUser.tag,
     type,
-    status: "Open",
+    status,
     reason,
     evidence,
     ticketId,
@@ -210,6 +240,20 @@ function addIncident({ targetUser, moderatorUser, type, reason, evidence = null,
 
 function incidentsForUser(userId) {
   return readIncidents().filter((incident) => incident.targetUserId === userId);
+}
+
+function recentIncidents(limit = 10) {
+  return readIncidents()
+    .slice()
+    .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
+    .slice(0, limit);
+}
+
+function pendingAccessRequests(limit = 10) {
+  return readAccessRequests()
+    .filter((request) => request.status === "Pending")
+    .sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
+    .slice(0, limit);
 }
 
 function createAccessRequest({ ticketId, ticketChannelId, targetUser, requesterUser, reason }) {
@@ -275,9 +319,12 @@ module.exports = {
   findCaseFile,
   hasApprovedAccess,
   incidentsForUser,
+  pendingAccessRequests,
   readAccessRequests,
   readCaseFiles,
   readIncidents,
+  recentIncidents,
+  searchCaseFiles,
   syncCaseFilesFromMembers,
   updateCaseFile,
   updateAccessRequest,

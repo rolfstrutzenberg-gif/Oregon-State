@@ -9,6 +9,10 @@ const {
   hasApprovedAccess,
   incidentsForUser,
   findCaseFile,
+  pendingAccessRequests,
+  readCaseFiles,
+  recentIncidents,
+  searchCaseFiles,
   updateCaseFile,
   updateAccessRequest,
 } = require("../services/case-file-service");
@@ -18,7 +22,19 @@ const { createLogger } = require("../utils/logger");
 const {
   CASE_DASHBOARD_RECENT_ID,
   CASE_DASHBOARD_REQUESTS_ID,
+  CASE_DASHBOARD_LOG_ACTION_ID,
+  CASE_DASHBOARD_LOG_ID,
+  CASE_DASHBOARD_LOG_MODAL_ID,
+  CASE_DASHBOARD_LOG_NOTES_ID,
+  CASE_DASHBOARD_LOG_SUMMARY_ID,
+  CASE_DASHBOARD_LOG_TARGET_ID,
+  CASE_DASHBOARD_LOG_TYPE_ID,
+  CASE_DASHBOARD_ROLE_ID,
+  CASE_DASHBOARD_ROLE_MODAL_ID,
+  CASE_DASHBOARD_ROLE_QUERY_ID,
   CASE_DASHBOARD_SEARCH_ID,
+  CASE_DASHBOARD_SEARCH_MODAL_ID,
+  CASE_DASHBOARD_SEARCH_QUERY_ID,
   CASE_FILE_APPROVE_PREFIX,
   CASE_FILE_DENY_PREFIX,
   CASE_FILE_REQUEST_ID,
@@ -31,8 +47,16 @@ const {
   TICKET_CLOSE_RESULT_ID,
   TICKET_CLOSE_SUMMARY_ID,
   createAccessRequestMessage,
+  createCaseLogCopyMessage,
   createCaseFileRequestModal,
   createCaseFileSummaryMessage,
+  createCaseSearchModal,
+  createCaseSearchResultsMessage,
+  createIncidentLogModal,
+  createRecentCasesMessage,
+  createRequestsQueueMessage,
+  createRoleSearchModal,
+  createRoleSearchResultsMessage,
   createTicketCloseModal,
 } = require("../utils/case-file-ui");
 const {
@@ -91,20 +115,198 @@ async function resolveInteractionGuild(interaction) {
   return guild;
 }
 
+function cleanLookupValue(value) {
+  return String(value || "").trim().replace(/[<@!>&]/g, "");
+}
+
+async function resolveMemberFromQuery(guild, query) {
+  const lookup = cleanLookupValue(query);
+  if (!lookup) {
+    return null;
+  }
+
+  await guild.members.fetch().catch(() => null);
+
+  const byId = guild.members.cache.get(lookup);
+  if (byId) {
+    return byId;
+  }
+
+  const lowered = lookup.toLowerCase();
+  return guild.members.cache.find((member) => {
+    const fields = [
+      member.user.username,
+      member.user.tag,
+      member.displayName,
+      member.nickname,
+    ];
+
+    return fields.some((field) => String(field || "").toLowerCase().includes(lowered));
+  }) || null;
+}
+
+async function resolveRoleFromQuery(guild, query) {
+  const lookup = cleanLookupValue(query);
+  if (!lookup) {
+    return null;
+  }
+
+  await guild.roles.fetch().catch(() => null);
+  const byId = guild.roles.cache.get(lookup);
+  if (byId) {
+    return byId;
+  }
+
+  const lowered = lookup.toLowerCase();
+  return guild.roles.cache.find((role) => role.name.toLowerCase().includes(lowered)) || null;
+}
+
+async function resolveCasesChannel(interaction) {
+  const explicitId = process.env.CASES_CHANNEL_ID;
+  if (explicitId) {
+    const channel = await interaction.client.channels.fetch(explicitId).catch(() => null);
+    if (channel?.isTextBased()) {
+      return channel;
+    }
+  }
+
+  const guild = await resolveInteractionGuild(interaction);
+  if (!guild) {
+    return null;
+  }
+
+  await guild.channels.fetch().catch(() => null);
+  return guild.channels.cache.find((channel) => channel.isTextBased?.() && channel.name === "📁｜cases") || null;
+}
+
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_SEARCH_ID) {
+      await interaction.showModal(createCaseSearchModal());
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_ROLE_ID) {
+      await interaction.showModal(createRoleSearchModal());
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_LOG_ID) {
+      await interaction.showModal(createIncidentLogModal());
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === CASE_DASHBOARD_SEARCH_MODAL_ID) {
+      const query = interaction.fields.getTextInputValue(CASE_DASHBOARD_SEARCH_QUERY_ID);
+      const matches = searchCaseFiles(query);
+
+      if (matches.length === 1) {
+        await interaction.reply({
+          ...createCaseFileSummaryMessage({
+            caseFile: matches[0],
+            incidents: incidentsForUser(matches[0].userId),
+          }),
+          ephemeral: true,
+        });
+        return;
+      }
+
       await interaction.reply({
-        content: "Search modal is next in the refinement pass. For now, use ticket case-file controls.",
+        ...createCaseSearchResultsMessage({ query, caseFiles: matches }),
         ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === CASE_DASHBOARD_ROLE_MODAL_ID) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Role search only works inside the server.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const query = interaction.fields.getTextInputValue(CASE_DASHBOARD_ROLE_QUERY_ID);
+      const role = await resolveRoleFromQuery(interaction.guild, query);
+      if (!role) {
+        await interaction.editReply({ content: "No role matched that search." });
+        return;
+      }
+
+      await interaction.guild.members.fetch().catch(() => null);
+      const roleMemberIds = new Set(role.members.map((member) => member.id));
+      const files = readCaseFiles().filter((file) => roleMemberIds.has(file.userId)).slice(0, 20);
+
+      await interaction.editReply(createRoleSearchResultsMessage({ role, caseFiles: files }));
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === CASE_DASHBOARD_LOG_MODAL_ID) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Incident logging only works inside the server.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const targetQuery = interaction.fields.getTextInputValue(CASE_DASHBOARD_LOG_TARGET_ID);
+      const targetMember = await resolveMemberFromQuery(interaction.guild, targetQuery);
+      if (!targetMember) {
+        await interaction.editReply({ content: "No member matched that incident target." });
+        return;
+      }
+
+      const type = interaction.fields.getTextInputValue(CASE_DASHBOARD_LOG_TYPE_ID);
+      const summary = interaction.fields.getTextInputValue(CASE_DASHBOARD_LOG_SUMMARY_ID);
+      const actionTaken = interaction.fields.getTextInputValue(CASE_DASHBOARD_LOG_ACTION_ID);
+      const notes = interaction.fields.getTextInputValue(CASE_DASHBOARD_LOG_NOTES_ID) || null;
+      const normalized = `${type} ${actionTaken}`.toLowerCase();
+      const currentCaseFile = findCaseFile(targetMember.id);
+      const nextFlags = new Set(currentCaseFile?.flags || []);
+
+      if (normalized.includes("blacklist")) {
+        nextFlags.add("Blacklist");
+      }
+
+      const incident = addIncident({
+        targetUser: targetMember.user,
+        moderatorUser: interaction.user,
+        type,
+        status: "Recorded",
+        reason: summary,
+        evidence: notes ? `Action / Result: ${actionTaken}\nNotes / Evidence: ${notes}` : `Action / Result: ${actionTaken}`,
+      });
+
+      const updatedCaseFile = updateCaseFile(targetMember.id, {
+        status: nextFlags.has("Blacklist") ? "Blacklisted" : "Clear",
+        flags: [...nextFlags],
+        lastActionTaken: actionTaken,
+        lastResult: actionTaken,
+      }) || findCaseFile(targetMember.id);
+
+      const casesChannel = await resolveCasesChannel(interaction);
+      if (casesChannel) {
+        await casesChannel.send(createCaseLogCopyMessage({
+          incident,
+          caseFile: updatedCaseFile,
+          actionTaken,
+        })).catch(() => null);
+      }
+
+      await interaction.editReply({
+        ...createCaseFileSummaryMessage({
+          caseFile: updatedCaseFile,
+          incidents: incidentsForUser(targetMember.id),
+          title: "Incident Logged",
+        }),
       });
       return;
     }
 
     if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_RECENT_ID) {
       await interaction.reply({
-        content: "Recent case file summaries are next in the refinement pass.",
+        ...createRecentCasesMessage(recentIncidents()),
         ephemeral: true,
       });
       return;
@@ -112,7 +314,7 @@ module.exports = {
 
     if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_REQUESTS_ID) {
       await interaction.reply({
-        content: "Access request queue is active via management DMs. Dashboard queue view comes next.",
+        ...createRequestsQueueMessage(pendingAccessRequests()),
         ephemeral: true,
       });
       return;
@@ -174,6 +376,7 @@ module.exports = {
         targetUser,
         moderatorUser: interaction.user,
         type: "Ticket Closure",
+        status: "Closed",
         reason: summary,
         evidence: `Action Taken: ${actionTaken}\nResult: ${result}`,
         ticketId: ticket.ticketId,

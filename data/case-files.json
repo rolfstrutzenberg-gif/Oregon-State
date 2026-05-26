@@ -15,7 +15,7 @@
     "flags": [],
     "incidentIds": [],
     "createdAt": "2026-05-26T10:56:22.233Z",
-    "updatedAt": "2026-05-26T10:56:22.233Z"
+    "updatedAt": "2026-05-26T22:35:12.718Z"
   },
   {
     "caseFileId": "CF-0002",
@@ -33,7 +33,7 @@
     "flags": [],
     "incidentIds": [],
     "createdAt": "2026-05-26T10:56:22.233Z",
-    "updatedAt": "2026-05-26T10:56:22.233Z"
+    "updatedAt": "2026-05-26T22:35:12.718Z"
   },
   {
     "caseFileId": "CF-0003",
@@ -44,7 +44,7 @@
     "robloxUsername": null,
     "incidentIds": [],
     "createdAt": "2026-05-26T10:36:23.904Z",
-    "updatedAt": "2026-05-26T10:56:22.233Z",
+    "updatedAt": "2026-05-26T22:35:12.718Z",
     "displayName": "Rolfsalt",
     "bot": false,
     "mention": "<@1454844507097927743>",
