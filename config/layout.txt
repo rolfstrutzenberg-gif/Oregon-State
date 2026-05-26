@@ -1,0 +1,107 @@
+━━ 🌲｜ENTRY ━━
+「👋」welcome
+「✅」verify
+
+━━ 📌｜INFORMATION ━━
+「📕」rules
+「👥」departments
+「🎭」self-roles
+「📚」chain-of-command
+「🆘」support
+「📌」information
+
+━━ 🤝｜PARTNERSHIPS ━━
+「🤝」partnership-information
+「🌺」partners
+「📝」our-ad
+「📣」server-ad
+「💛」supporters
+「🚫」blacklisted
+
+━━ 📢｜BULLETIN ━━
+「📢」announcements
+「🛰️」sessions
+「🏁」results
+「📋」staff-application
+「🎉」giveaways
+
+━━ 🚔｜DEPARTMENTS ━━
+「🚔」department-information
+「🌲」oregon-state-police
+「🦌」fish-wildlife
+「🛣️」dot
+
+Voice
+🔊 OSP Briefing Room
+🔊 Fish & Wildlife Ops
+🔊 DOT Operations
+
+━━ 💬｜COMMUNITY ━━
+「💬」general
+「📸」media
+「🤝」requests
+「💡」suggestions
+「📊」polls
+「🎮」off-topic
+
+Voice
+🔊 General VC
+🔊 Lounge 1
+🔊 Lounge 2
+
+━━ 🎓｜TRAINING ━━
+「📖」training-information
+「📝」training-requests
+「📚」training-materials
+「👨‍🏫」instructor-chat
+「📅」training-schedule
+「📊」training-results
+
+Voice
+🔊 Training Room 1
+🔊 Training Room 2
+🔊 Instructor Office
+
+━━ 🔒｜STAFF ━━
+「💬」staff-chat
+「📣」staff-announcements
+「📌」staff-information
+「📈」promotions
+「⚠️」staff-warnings
+「📝」staff-notes
+「📚」staff-resources
+
+Voice
+🔊 Staff Room
+🔊 Moderator Office
+🔊 Admin Office
+
+━━ 📑｜LOGS ━━
+「📝」moderation-logs
+「🚪」join-leave-logs
+「⚙️」bot-logs
+「🔨」punishment-logs
+「🎫」ticket-logs
+「📋」application-logs
+「👤」role-logs
+「📜」transcripts
+「🎮」game-logs
+
+━━ 👑｜MANAGEMENT ━━
+「💼」management-chat
+「👑」executive-chat
+「📊」staff-decisions
+「🗳️」votes
+「📈」server-growth
+「💡」future-plans
+
+Voice
+🔊 Executive Meeting Room
+
+━━ 🛡️｜OWNERSHIP ━━
+「👑」owner-chat
+「📢」owner-announcements
+「📋」owner-decisions
+
+Voice
+🔊 Ownership Office

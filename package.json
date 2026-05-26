@@ -1,0 +1,26 @@
+{
+  "name": "oregon-state-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Discord bot foundation for Oregon State Bot.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "check": "node --check src/index.js",
+    "deploy:commands": "node src/deploy-commands.js",
+    "import:layout": "node scripts/import-layout.js",
+    "import:roles": "node scripts/import-role-matrix.js",
+    "import:channels": "node scripts/import-channel-matrix.js",
+    "permissions:unverified": "node scripts/enforce-unverified-visibility.js",
+    "snapshot:guild": "node scripts/snapshot-guild.js",
+    "restore:guild": "node scripts/restore-guild.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "dotenv": "^16.4.5"
+  }
+}

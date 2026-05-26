@@ -1,0 +1,44 @@
+# Layout import format
+# Blank lines and lines starting with # are ignored.
+#
+# Roles:
+# ROLE | Role Name | #hexcolor | hoist=true|false | mentionable=true|false
+#
+# Categories:
+# ━━ 🌲｜ENTRY ━━
+#
+# Text channels:
+# 「👋」welcome
+#
+# Voice section marker:
+# Voice
+# 🔊 OSP Briefing Room
+
+ROLE | Verified | #57f287 | hoist=false | mentionable=false
+ROLE | Oregon State Police | #5865f2 | hoist=true | mentionable=false
+ROLE | Fish & Wildlife | #2ecc71 | hoist=true | mentionable=false
+ROLE | DOT | #f1c40f | hoist=true | mentionable=false
+
+━━ 🌲｜ENTRY ━━
+「👋」welcome
+「✅」verify
+「🎭」self-roles
+
+━━ 📌｜INFORMATION ━━
+「📕」rules
+「👥」departments
+「📚」chain-of-command
+「🆘」support
+「📌」information
+
+━━ 📢｜BULLETIN ━━
+「📢」announcements
+「🛰️」sessions
+
+━━ 💬｜COMMUNITY ━━
+「💬」general
+「📸」media
+
+Voice
+🔊 General VC
+🔊 Lounge 1

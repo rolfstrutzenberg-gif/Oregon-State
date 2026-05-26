@@ -1,0 +1,19 @@
+{
+  "brandText": "OSRP",
+  "title": "Rules",
+  "intro": "Review both rule sets below before continuing.",
+  "discordRules": [
+    "Be respectful to members and staff.",
+    "No harassment, discrimination, or disruptive behavior.",
+    "Keep content appropriate for the server.",
+    "Do not spam, advertise, or abuse pings.",
+    "Follow staff instructions when moderation is involved."
+  ],
+  "inGameRules": [
+    "Use realistic roleplay at all times.",
+    "Do not random deathmatch or grief other players.",
+    "No exploiting, cheating, or abusing game systems.",
+    "Follow scene priorities and staff directions.",
+    "Keep your roleplay fair, believable, and immersive."
+  ]
+}

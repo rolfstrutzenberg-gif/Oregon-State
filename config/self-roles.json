@@ -1,0 +1,74 @@
+{
+  "brandText": "OSRP",
+  "title": "Self Roles",
+  "description": "Select the roles that apply to you and customize your experience.",
+  "placeholder": "Claim Your Roles Here!",
+  "options": [
+    {
+      "value": "announcement_ping",
+      "label": "Announcement Ping",
+      "description": "Get pinged for announcements.",
+      "roleName": "➟ Announcement Ping"
+    },
+    {
+      "value": "update_ping",
+      "label": "Update Ping",
+      "description": "Get pinged for updates.",
+      "roleName": "➟ Update Ping"
+    },
+    {
+      "value": "session_ping",
+      "label": "Session Ping",
+      "description": "Get pinged for sessions.",
+      "roleName": "➟ Session Ping"
+    },
+    {
+      "value": "chat_revive_ping",
+      "label": "Chat Revive Ping",
+      "description": "Get pinged when chat needs activity.",
+      "roleName": "➟ Chat Revive Ping"
+    },
+    {
+      "value": "partnership_ping",
+      "label": "Partnership Ping",
+      "description": "Get pinged for partnerships.",
+      "roleName": "➟ Partnership Ping"
+    },
+    {
+      "value": "department_ping",
+      "label": "Department Ping",
+      "description": "Get pinged for department updates.",
+      "roleName": "➟ Department Ping"
+    },
+    {
+      "value": "giveaway_ping",
+      "label": "Giveaway Ping",
+      "description": "Get pinged for giveaways.",
+      "roleName": "➟ Giveaway Ping"
+    },
+    {
+      "value": "event_ping",
+      "label": "Event Ping",
+      "description": "Get pinged for events.",
+      "roleName": "➟ Event Ping"
+    },
+    {
+      "value": "poll_ping",
+      "label": "Poll Ping",
+      "description": "Get pinged for polls.",
+      "roleName": "➟ Poll Ping"
+    },
+    {
+      "value": "media_ping",
+      "label": "Media Ping",
+      "description": "Get pinged for media posts.",
+      "roleName": "➟ Media Ping"
+    },
+    {
+      "value": "application_ping",
+      "label": "Application Ping",
+      "description": "Get pinged for applications.",
+      "roleName": "➟ Application Ping"
+    }
+  ]
+}

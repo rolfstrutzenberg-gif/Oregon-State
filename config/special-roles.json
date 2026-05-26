@@ -1,0 +1,18 @@
+[
+  {
+    "name": "➟ Unverified",
+    "color": "#FFFFFF",
+    "hoist": false,
+    "mentionable": false,
+    "permissions": [],
+    "notes": "Supplemental role for members who have not completed verification yet."
+  },
+  {
+    "name": "➟ Pending Rules",
+    "color": "#FFFFFF",
+    "hoist": false,
+    "mentionable": false,
+    "permissions": [],
+    "notes": "Supplemental onboarding role for verified members who still need to accept the rules."
+  }
+]
