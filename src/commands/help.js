@@ -17,6 +17,7 @@ module.exports = {
       { name: "/verification", value: "Post the verification panel." },
       { name: "/rules", value: "Post the rules panel." },
       { name: "/selfroles", value: "Post the self-role panel." },
+      { name: "/session", value: "Open, close, vote, and check session status." },
       { name: "/sessions", value: "Post the mock session panel." },
       { name: "/ticket", value: "Create a basic staff ticket." },
       { name: "/case-dashboard", value: "Post the case files dashboard." },

@@ -67,6 +67,20 @@ const {
 } = require("../utils/rules-panel");
 const { SELF_ROLES_SELECT_ID } = require("../utils/self-roles-panel");
 const { syncMemberSelfRoles } = require("../services/self-roles-service");
+const {
+  addVoteInterest,
+  findSessionVote,
+  getActiveSession,
+  readSessionsStore,
+  removeVoteInterest,
+} = require("../services/session-service");
+const {
+  SESSION_INFO_PREFIX,
+  SESSION_VOTE_INTERESTED_PREFIX,
+  SESSION_VOTE_REMOVE_PREFIX,
+  createSessionInfoMessage,
+  createSessionVotePanel,
+} = require("../utils/sessions-panel");
 
 const logger = createLogger("interaction");
 
@@ -182,6 +196,60 @@ async function resolveCasesChannel(interaction) {
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId.startsWith(SESSION_INFO_PREFIX)) {
+      const sessionId = interaction.customId.slice(SESSION_INFO_PREFIX.length);
+      const activeSession = getActiveSession();
+      const session = activeSession?.sessionId === sessionId
+        ? activeSession
+        : readSessionsStore().history.find((entry) => entry.sessionId === sessionId);
+
+      if (!session) {
+        await interaction.reply({
+          content: "Session record not found.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.reply({
+        ...createSessionInfoMessage(session),
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(SESSION_VOTE_INTERESTED_PREFIX)) {
+      const voteId = interaction.customId.slice(SESSION_VOTE_INTERESTED_PREFIX.length);
+      const vote = addVoteInterest(voteId, interaction.user.id);
+
+      if (!vote) {
+        await interaction.reply({
+          content: "Session vote not found.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.update(createSessionVotePanel({ vote }));
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(SESSION_VOTE_REMOVE_PREFIX)) {
+      const voteId = interaction.customId.slice(SESSION_VOTE_REMOVE_PREFIX.length);
+      const existing = findSessionVote(voteId);
+      if (!existing) {
+        await interaction.reply({
+          content: "Session vote not found.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const vote = removeVoteInterest(voteId, interaction.user.id);
+      await interaction.update(createSessionVotePanel({ vote }));
+      return;
+    }
+
     if (interaction.isButton() && interaction.customId === CASE_DASHBOARD_SEARCH_ID) {
       await interaction.showModal(createCaseSearchModal());
       return;
