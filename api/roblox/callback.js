@@ -95,6 +95,7 @@ module.exports = async function handler(request, response) {
       500,
       "Verification Not Ready",
       `<h1>Verification Not Ready</h1><p>${escapeHtml(error.message)}</p>`,
+      { tone: "danger" },
     );
     return;
   }
@@ -110,6 +111,7 @@ module.exports = async function handler(request, response) {
       400,
       "Verification Failed",
       "<h1>Verification Failed</h1><p>The verification session expired or was invalid. Return to Discord and start again.</p>",
+      { tone: "danger" },
     );
     return;
   }
@@ -139,6 +141,7 @@ module.exports = async function handler(request, response) {
       500,
       "Verification Failed",
       `<h1>Verification Failed</h1><p>${escapeHtml(error.message)}</p>`,
+      { tone: "danger" },
     );
   }
 };

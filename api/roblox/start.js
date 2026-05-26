@@ -14,6 +14,7 @@ module.exports = async function handler(request, response) {
       500,
       "Verification Not Ready",
       `<h1>Verification Not Ready</h1><p>${escapeHtml(error.message)}</p>`,
+      { tone: "danger" },
     );
     return;
   }

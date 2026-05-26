@@ -7,7 +7,22 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function page(title, body) {
+const tones = {
+  default: {
+    accent: "#0b3d24",
+    line: "#1c3325",
+    glow: "#132217",
+  },
+  danger: {
+    accent: "#7f1d1d",
+    line: "#4c1d1d",
+    glow: "#2a1111",
+  },
+};
+
+function page(title, body, options = {}) {
+  const tone = tones[options.tone] || tones.default;
+
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -22,7 +37,9 @@ function page(title, body) {
         --line: #1c3325;
         --text: #f4f6f3;
         --muted: #a6afa8;
-        --accent: #0b3d24;
+        --accent: ${tone.accent};
+        --line: ${tone.line};
+        --glow: ${tone.glow};
       }
 
       * {
@@ -34,7 +51,7 @@ function page(title, body) {
         margin: 0;
         display: grid;
         place-items: center;
-        background: radial-gradient(circle at top, #132217 0, var(--bg) 42rem);
+        background: radial-gradient(circle at top, var(--glow) 0, var(--bg) 42rem);
         color: var(--text);
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
@@ -72,10 +89,10 @@ function page(title, body) {
 </html>`;
 }
 
-function sendHtml(response, statusCode, title, body) {
+function sendHtml(response, statusCode, title, body, options = {}) {
   response.statusCode = statusCode;
   response.setHeader("content-type", "text/html; charset=utf-8");
-  response.end(page(title, body));
+  response.end(page(title, body, options));
 }
 
 module.exports = {
