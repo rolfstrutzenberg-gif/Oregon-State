@@ -1,0 +1,18 @@
+{
+  "createdAt": "2026-05-25T19:17:17.916Z",
+  "guildId": "1508482350764523530",
+  "guildName": "Pre Release | Oregon State Roleplay",
+  "roles": [
+    {
+      "id": "1508547457687097428",
+      "name": "Oregon State Systems",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "8",
+      "position": 1,
+      "managed": true
+    }
+  ],
+  "channels": []
+}

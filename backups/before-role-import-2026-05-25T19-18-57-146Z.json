@@ -1,0 +1,1168 @@
+{
+  "createdAt": "2026-05-25T19:18:57.148Z",
+  "guildId": "1508482350764523530",
+  "guildName": "Pre Release | Oregon State Roleplay",
+  "roles": [
+    {
+      "id": "1508547457687097428",
+      "name": "Oregon State Systems",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "8",
+      "position": 116,
+      "managed": true
+    },
+    {
+      "id": "1508549735873511504",
+      "name": "OS:RP Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "311922125888",
+      "position": 115,
+      "managed": false
+    },
+    {
+      "id": "1508549736695599265",
+      "name": "Ticket Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "397821471824",
+      "position": 114,
+      "managed": false
+    },
+    {
+      "id": "1508549737438122174",
+      "name": "Moderation Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "1118839106758",
+      "position": 113,
+      "managed": false
+    },
+    {
+      "id": "1508549738461528225",
+      "name": "Session Bot",
+      "color": 0,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "2147732544",
+      "position": 112,
+      "managed": false
+    },
+    {
+      "id": "1508549740395233470",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 111,
+      "managed": false
+    },
+    {
+      "id": "1508549741053739008",
+      "name": "➟ Founder",
+      "color": 11604518,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085791034273791",
+      "position": 110,
+      "managed": false
+    },
+    {
+      "id": "1508549743100428411",
+      "name": "➟ Co-Founder",
+      "color": 11604518,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085791034273791",
+      "position": 109,
+      "managed": false
+    },
+    {
+      "id": "1508549743830241471",
+      "name": "➟ Deputy Director",
+      "color": 11604518,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085791034273783",
+      "position": 108,
+      "managed": false
+    },
+    {
+      "id": "1508549744409182249",
+      "name": "➟ Assistant Director",
+      "color": 11604518,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085791034273783",
+      "position": 107,
+      "managed": false
+    },
+    {
+      "id": "1508549745034137722",
+      "name": "➥ Ownership Team",
+      "color": 11604518,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 106,
+      "managed": false
+    },
+    {
+      "id": "1508549746174726345",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 105,
+      "managed": false
+    },
+    {
+      "id": "1508549747898585139",
+      "name": "➟ Executive Director",
+      "color": 13081147,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789960531703",
+      "position": 104,
+      "managed": false
+    },
+    {
+      "id": "1508549748628652163",
+      "name": "➟ Director",
+      "color": 13081147,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789960531703",
+      "position": 103,
+      "managed": false
+    },
+    {
+      "id": "1508549749840805988",
+      "name": "➟ Operations Manager",
+      "color": 13081147,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146836727",
+      "position": 102,
+      "managed": false
+    },
+    {
+      "id": "1508549750532735080",
+      "name": "➟ Server Manager",
+      "color": 13081147,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146836727",
+      "position": 101,
+      "managed": false
+    },
+    {
+      "id": "1508549751455617107",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 100,
+      "managed": false
+    },
+    {
+      "id": "1508549752541806633",
+      "name": "➟ Senior Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 99,
+      "managed": false
+    },
+    {
+      "id": "1508549753149849602",
+      "name": "➟ Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 98,
+      "managed": false
+    },
+    {
+      "id": "1508549754718523442",
+      "name": "➟ Junior Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 97,
+      "managed": false
+    },
+    {
+      "id": "1508549756224405735",
+      "name": "➟ Staff Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 96,
+      "managed": false
+    },
+    {
+      "id": "1508549757121990756",
+      "name": "➟ Department Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 95,
+      "managed": false
+    },
+    {
+      "id": "1508549758183145515",
+      "name": "➟ Community Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 94,
+      "managed": false
+    },
+    {
+      "id": "1508549758761959505",
+      "name": "➟ Support Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 93,
+      "managed": false
+    },
+    {
+      "id": "1508549759743561790",
+      "name": "➟ Media Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 92,
+      "managed": false
+    },
+    {
+      "id": "1508549760619909131",
+      "name": "➟ Training Manager",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789146181315",
+      "position": 91,
+      "managed": false
+    },
+    {
+      "id": "1508549762931097720",
+      "name": "➥ Management Team",
+      "color": 7159751,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 90,
+      "managed": false
+    },
+    {
+      "id": "1508549763371372716",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 89,
+      "managed": false
+    },
+    {
+      "id": "1508549764512219146",
+      "name": "➟ Supervision Director",
+      "color": 13920799,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077849660993",
+      "position": 88,
+      "managed": false
+    },
+    {
+      "id": "1508549764978053213",
+      "name": "➟ Senior Supervisor",
+      "color": 13920799,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077849660993",
+      "position": 87,
+      "managed": false
+    },
+    {
+      "id": "1508549766122962964",
+      "name": "➟ Supervisor",
+      "color": 13920799,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077849660993",
+      "position": 86,
+      "managed": false
+    },
+    {
+      "id": "1508549767175602258",
+      "name": "➟ Junior Supervisor",
+      "color": 13920799,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077849660993",
+      "position": 85,
+      "managed": false
+    },
+    {
+      "id": "1508549767960199210",
+      "name": "➥ Supervisory Team",
+      "color": 13920799,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 84,
+      "managed": false
+    },
+    {
+      "id": "1508549768690008167",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 83,
+      "managed": false
+    },
+    {
+      "id": "1508549769516023948",
+      "name": "➟ Internal Affairs Director",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077828689601",
+      "position": 82,
+      "managed": false
+    },
+    {
+      "id": "1508549770270998730",
+      "name": "➟ Internal Affairs Supervisor",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077828689601",
+      "position": 81,
+      "managed": false
+    },
+    {
+      "id": "1508549770954932284",
+      "name": "➟ Senior IA Officer",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077694471745",
+      "position": 80,
+      "managed": false
+    },
+    {
+      "id": "1508549771714101348",
+      "name": "➟ IA Officer",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077694471745",
+      "position": 79,
+      "managed": false
+    },
+    {
+      "id": "1508549772347445248",
+      "name": "➟ Junior IA Officer",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "582077694471745",
+      "position": 78,
+      "managed": false
+    },
+    {
+      "id": "1508549773081444562",
+      "name": "➥ Internal Affairs Team",
+      "color": 10508844,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 77,
+      "managed": false
+    },
+    {
+      "id": "1508549773848744076",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 76,
+      "managed": false
+    },
+    {
+      "id": "1508549775027474542",
+      "name": "➟ Staff Director",
+      "color": 4009101,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789154569927",
+      "position": 75,
+      "managed": false
+    },
+    {
+      "id": "1508549775908143318",
+      "name": "➟ Head Administrator",
+      "color": 8080895,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789154569927",
+      "position": 74,
+      "managed": false
+    },
+    {
+      "id": "1508549777816555530",
+      "name": "➟ Senior Administrator",
+      "color": 8080895,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085789154569927",
+      "position": 73,
+      "managed": false
+    },
+    {
+      "id": "1508549779192287394",
+      "name": "➟ Administrator",
+      "color": 8080895,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5085711836769863",
+      "position": 72,
+      "managed": false
+    },
+    {
+      "id": "1508549780081479690",
+      "name": "➟ Junior Administrator",
+      "color": 8080895,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "5068119650725443",
+      "position": 71,
+      "managed": false
+    },
+    {
+      "id": "1508549780874199090",
+      "name": "➟ Head Moderator",
+      "color": 2062925,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "564520023354947",
+      "position": 70,
+      "managed": false
+    },
+    {
+      "id": "1508549781562065166",
+      "name": "➟ Senior Moderator",
+      "color": 2062925,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "564520023354947",
+      "position": 69,
+      "managed": false
+    },
+    {
+      "id": "1508549782388473897",
+      "name": "➟ Moderator",
+      "color": 2062925,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "564485663616577",
+      "position": 68,
+      "managed": false
+    },
+    {
+      "id": "1508549783802085487",
+      "name": "➟ Junior Moderator",
+      "color": 2062925,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "564468462775873",
+      "position": 67,
+      "managed": false
+    },
+    {
+      "id": "1508549784766775466",
+      "name": "➟ Trial Moderator",
+      "color": 2062925,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563368816930369",
+      "position": 66,
+      "managed": false
+    },
+    {
+      "id": "1508549785429348494",
+      "name": "➥ Staff Team",
+      "color": 4009101,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 65,
+      "managed": false
+    },
+    {
+      "id": "1508549786310148297",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 64,
+      "managed": false
+    },
+    {
+      "id": "1508549787924959405",
+      "name": "➟ Training Director",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 63,
+      "managed": false
+    },
+    {
+      "id": "1508549788898169046",
+      "name": "➟ Training Supervisor",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 62,
+      "managed": false
+    },
+    {
+      "id": "1508549789795483812",
+      "name": "➟ Senior Instructor",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 61,
+      "managed": false
+    },
+    {
+      "id": "1508549790915498167",
+      "name": "➟ Instructor",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 60,
+      "managed": false
+    },
+    {
+      "id": "1508549792123584654",
+      "name": "➟ Junior Instructor",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 59,
+      "managed": false
+    },
+    {
+      "id": "1508549792777900072",
+      "name": "➥ Training Team",
+      "color": 3120856,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 58,
+      "managed": false
+    },
+    {
+      "id": "1508549793625149460",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 57,
+      "managed": false
+    },
+    {
+      "id": "1508549794723790998",
+      "name": "➟ Senior Support",
+      "color": 2074529,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563385996799553",
+      "position": 56,
+      "managed": false
+    },
+    {
+      "id": "1508549795567108128",
+      "name": "➟ Support Staff",
+      "color": 2074529,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563385996799553",
+      "position": 55,
+      "managed": false
+    },
+    {
+      "id": "1508549796556964070",
+      "name": "➥ Support Team",
+      "color": 2074529,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 54,
+      "managed": false
+    },
+    {
+      "id": "1508549797232246945",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 53,
+      "managed": false
+    },
+    {
+      "id": "1508549798071107674",
+      "name": "➟ Media Director",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002974785",
+      "position": 52,
+      "managed": false
+    },
+    {
+      "id": "1508549799190728796",
+      "name": "➟ Media Supervisor",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002974785",
+      "position": 51,
+      "managed": false
+    },
+    {
+      "id": "1508549800185037004",
+      "name": "➟ Social Media Manager",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002974785",
+      "position": 50,
+      "managed": false
+    },
+    {
+      "id": "1508549801137144061",
+      "name": "➟ Senior Media",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 49,
+      "managed": false
+    },
+    {
+      "id": "1508549802344845455",
+      "name": "➟ Recording Team",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 48,
+      "managed": false
+    },
+    {
+      "id": "1508549803330765011",
+      "name": "➟ Content Creator",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580961002966593",
+      "position": 47,
+      "managed": false
+    },
+    {
+      "id": "1508549804672815264",
+      "name": "➥ Media Team",
+      "color": 1334688,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 46,
+      "managed": false
+    },
+    {
+      "id": "1508549805390037244",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 45,
+      "managed": false
+    },
+    {
+      "id": "1508549805868056587",
+      "name": "➟ Department Director",
+      "color": 2051382,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 44,
+      "managed": false
+    },
+    {
+      "id": "1508549807004713120",
+      "name": "➟ Department Supervisor",
+      "color": 2051382,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 43,
+      "managed": false
+    },
+    {
+      "id": "1508549808003223684",
+      "name": "➟ Department Command",
+      "color": 2051382,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 42,
+      "managed": false
+    },
+    {
+      "id": "1508549808959524944",
+      "name": "➟ Oregon State Police Command",
+      "color": 1981023,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 41,
+      "managed": false
+    },
+    {
+      "id": "1508549809290612847",
+      "name": "➟ Fish & Wildlife Command",
+      "color": 3046706,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 40,
+      "managed": false
+    },
+    {
+      "id": "1508549810230136853",
+      "name": "➟ DOT Supervisor",
+      "color": 15105570,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "580986772778561",
+      "position": 39,
+      "managed": false
+    },
+    {
+      "id": "1508549811622908054",
+      "name": "➟ Oregon State Police",
+      "color": 1981023,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 38,
+      "managed": false
+    },
+    {
+      "id": "1508549812251791431",
+      "name": "➟ Fish & Wildlife",
+      "color": 3046706,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 37,
+      "managed": false
+    },
+    {
+      "id": "1508549813594099782",
+      "name": "➟ Department of Transportation",
+      "color": 15105570,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 36,
+      "managed": false
+    },
+    {
+      "id": "1508549814281961603",
+      "name": "➟ Civilian",
+      "color": 5025232,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 35,
+      "managed": false
+    },
+    {
+      "id": "1508549815091335208",
+      "name": "➥ Department Team",
+      "color": 2051382,
+      "hoist": true,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 34,
+      "managed": false
+    },
+    {
+      "id": "1508549815699636248",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 33,
+      "managed": false
+    },
+    {
+      "id": "1508549816987291821",
+      "name": "➟ Verified Community Member",
+      "color": 16119285,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 32,
+      "managed": false
+    },
+    {
+      "id": "1508549818056970414",
+      "name": "➟ Community Member",
+      "color": 16119285,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 31,
+      "managed": false
+    },
+    {
+      "id": "1508549818530660614",
+      "name": "➟ Server Booster",
+      "color": 16023551,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 30,
+      "managed": false
+    },
+    {
+      "id": "1508549819709390859",
+      "name": "➟ VIP Supporter",
+      "color": 16765286,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 29,
+      "managed": false
+    },
+    {
+      "id": "1508549821055893704",
+      "name": "➟ Partner",
+      "color": 7855479,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 28,
+      "managed": false
+    },
+    {
+      "id": "1508549822158868750",
+      "name": "➟ Retired Staff",
+      "color": 8068651,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 27,
+      "managed": false
+    },
+    {
+      "id": "1508549822599135405",
+      "name": "➟ Donator",
+      "color": 15902976,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "563368816922177",
+      "position": 26,
+      "managed": false
+    },
+    {
+      "id": "1508549823643783271",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 25,
+      "managed": false
+    },
+    {
+      "id": "1508549824390103060",
+      "name": "➟ Strike 1",
+      "color": 9109504,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 24,
+      "managed": false
+    },
+    {
+      "id": "1508549825061458035",
+      "name": "➟ Strike 2",
+      "color": 9109504,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 23,
+      "managed": false
+    },
+    {
+      "id": "1508549825485082839",
+      "name": "➟ Strike 3",
+      "color": 9109504,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 22,
+      "managed": false
+    },
+    {
+      "id": "1508549826239926454",
+      "name": "➟ Under Investigation",
+      "color": 13920799,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 21,
+      "managed": false
+    },
+    {
+      "id": "1508549827359674429",
+      "name": "➟ Suspended Staff",
+      "color": 5902095,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 20,
+      "managed": false
+    },
+    {
+      "id": "1508549827724705915",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 19,
+      "managed": false
+    },
+    {
+      "id": "1508549829012226139",
+      "name": "➟ Approved",
+      "color": 3329330,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 18,
+      "managed": false
+    },
+    {
+      "id": "1508549829293510797",
+      "name": "➟ Denied",
+      "color": 15087942,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 17,
+      "managed": false
+    },
+    {
+      "id": "1508549830115463252",
+      "name": "➟ Revoked Application",
+      "color": 46296,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 16,
+      "managed": false
+    },
+    {
+      "id": "1508549831180816424",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 15,
+      "managed": false
+    },
+    {
+      "id": "1508549832426651659",
+      "name": "➟ Session Ping",
+      "color": 3066993,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 14,
+      "managed": false
+    },
+    {
+      "id": "1508549835123327056",
+      "name": "➟ Announcement Ping",
+      "color": 15087942,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 13,
+      "managed": false
+    },
+    {
+      "id": "1508549837308563638",
+      "name": "➟ Giveaway Ping",
+      "color": 16737988,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 12,
+      "managed": false
+    },
+    {
+      "id": "1508549838185431281",
+      "name": "➟ Event Ping",
+      "color": 16747586,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 11,
+      "managed": false
+    },
+    {
+      "id": "1508549839175290980",
+      "name": "➟ Update Ping",
+      "color": 3447003,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 10,
+      "managed": false
+    },
+    {
+      "id": "1508549840148107505",
+      "name": "➟ Poll Ping",
+      "color": 10182117,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 9,
+      "managed": false
+    },
+    {
+      "id": "1508549840508944498",
+      "name": "➟ Partnership Ping",
+      "color": 7855479,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 8,
+      "managed": false
+    },
+    {
+      "id": "1508549841951658024",
+      "name": "➟ Media Ping",
+      "color": 1334688,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 7,
+      "managed": false
+    },
+    {
+      "id": "1508549842257838101",
+      "name": "➟ Application Ping",
+      "color": 13081147,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 6,
+      "managed": false
+    },
+    {
+      "id": "1508549843277053972",
+      "name": "➟ Department Ping",
+      "color": 2051382,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 5,
+      "managed": false
+    },
+    {
+      "id": "1508549844220907612",
+      "name": "➟ Chat Revive Ping",
+      "color": 47321,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 4,
+      "managed": false
+    },
+    {
+      "id": "1508549845231731030",
+      "name": "⎯⎯⎯⎯⎯⎯⎯⎯⎯",
+      "color": 1118481,
+      "hoist": false,
+      "mentionable": false,
+      "permissions": "0",
+      "position": 3,
+      "managed": false
+    },
+    {
+      "id": "1508549846548611092",
+      "name": "➟ Blacklisted",
+      "color": 0,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "0",
+      "position": 2,
+      "managed": false
+    },
+    {
+      "id": "1508549847559573616",
+      "name": "➟ Muted",
+      "color": 5902095,
+      "hoist": false,
+      "mentionable": true,
+      "permissions": "2147550208",
+      "position": 1,
+      "managed": false
+    }
+  ],
+  "channels": []
+}
