@@ -2,11 +2,7 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/verification-portal/api/roblox/start"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/verification-portal/api/$1"
+      "dest": "/api/roblox/start"
     }
   ]
 }
