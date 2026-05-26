@@ -4,13 +4,15 @@ const { findVerificationByDiscordUserId } = require("../services/verification-st
 const { grantFullAccess } = require("../services/onboarding-service");
 const {
   createAccessRequest,
+  addIncident,
   findAccessRequest,
   hasApprovedAccess,
   incidentsForUser,
   findCaseFile,
+  updateCaseFile,
   updateAccessRequest,
 } = require("../services/case-file-service");
-const { findTicketByChannelId } = require("../services/ticket-service");
+const { findTicketByChannelId, updateTicket } = require("../services/ticket-service");
 const { isLogExemptUser } = require("../services/log-exemption-service");
 const { createLogger } = require("../utils/logger");
 const {
@@ -23,9 +25,15 @@ const {
   CASE_FILE_REQUEST_MODAL_ID,
   CASE_FILE_REQUEST_REASON_ID,
   CASE_FILE_VIEW_ID,
+  TICKET_CLOSE_ACTION_ID,
+  TICKET_CLOSE_ID,
+  TICKET_CLOSE_MODAL_ID,
+  TICKET_CLOSE_RESULT_ID,
+  TICKET_CLOSE_SUMMARY_ID,
   createAccessRequestMessage,
   createCaseFileRequestModal,
   createCaseFileSummaryMessage,
+  createTicketCloseModal,
 } = require("../utils/case-file-ui");
 const {
   RULES_ACCEPT_BUTTON_ID,
@@ -62,6 +70,25 @@ async function notifyCaseFileRequest(interaction, request) {
   for (const recipient of recipients) {
     await recipient.send(message).catch(() => null);
   }
+}
+
+async function resolveInteractionGuild(interaction) {
+  if (interaction.guild) {
+    return interaction.guild;
+  }
+
+  if (!process.env.GUILD_ID) {
+    return null;
+  }
+
+  const guild = await interaction.client.guilds.fetch(process.env.GUILD_ID).catch(() => null);
+  if (!guild) {
+    return null;
+  }
+
+  await guild.roles.fetch().catch(() => null);
+  await guild.members.fetch().catch(() => null);
+  return guild;
 }
 
 module.exports = {
@@ -102,6 +129,79 @@ module.exports = {
       }
 
       await interaction.showModal(createCaseFileRequestModal());
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === TICKET_CLOSE_ID) {
+      const ticket = findTicketByChannelId(interaction.channelId);
+      if (!ticket) {
+        await interaction.reply({
+          content: "This button only works inside an open ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.showModal(createTicketCloseModal());
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === TICKET_CLOSE_MODAL_ID) {
+      const ticket = findTicketByChannelId(interaction.channelId);
+      if (!ticket) {
+        await interaction.reply({
+          content: "This close form is not attached to an open ticket.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const targetUser = await interaction.client.users.fetch(ticket.targetUserId);
+      const summary = interaction.fields.getTextInputValue(TICKET_CLOSE_SUMMARY_ID);
+      const actionTaken = interaction.fields.getTextInputValue(TICKET_CLOSE_ACTION_ID);
+      const result = interaction.fields.getTextInputValue(TICKET_CLOSE_RESULT_ID);
+      const normalizedResult = result.toLowerCase();
+      const caseFile = findCaseFile(ticket.targetUserId);
+      const nextFlags = new Set(caseFile?.flags || []);
+
+      if (normalizedResult.includes("blacklist")) {
+        nextFlags.add("Blacklist");
+      }
+
+      addIncident({
+        targetUser,
+        moderatorUser: interaction.user,
+        type: "Ticket Closure",
+        reason: summary,
+        evidence: `Action Taken: ${actionTaken}\nResult: ${result}`,
+        ticketId: ticket.ticketId,
+      });
+
+      updateCaseFile(ticket.targetUserId, {
+        status: nextFlags.has("Blacklist") ? "Blacklisted" : "Clear",
+        activeTicketId: null,
+        activeInvestigationStartedAt: null,
+        flags: [...nextFlags],
+        lastTicketSummary: summary,
+        lastActionTaken: actionTaken,
+        lastResult: result,
+      });
+
+      updateTicket(ticket.ticketId, {
+        status: "Closed",
+        closedByUserId: interaction.user.id,
+        closedByTag: interaction.user.tag,
+        closedAt: new Date().toISOString(),
+        summary,
+        actionTaken,
+        result,
+      });
+
+      await interaction.editReply({
+        content: "Ticket closure recorded. Case file updated.",
+      });
       return;
     }
 
@@ -179,7 +279,8 @@ module.exports = {
         return;
       }
 
-      const exempt = await isLogExemptUser(interaction.guild, request.targetUserId);
+      const guild = await resolveInteractionGuild(interaction);
+      const exempt = guild ? await isLogExemptUser(guild, request.targetUserId) : false;
       const updated = updateAccessRequest(requestId, {
         status: "Approved",
         approvedByUserId: interaction.user.id,

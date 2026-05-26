@@ -19,6 +19,7 @@ module.exports = {
       { name: "/selfroles", value: "Post the self-role panel." },
       { name: "/ticket", value: "Create a basic staff ticket." },
       { name: "/case-dashboard", value: "Post the case files dashboard." },
+      { name: "/case-backfill", value: "Backfill case files for current members." },
     );
 
     await interaction.reply({

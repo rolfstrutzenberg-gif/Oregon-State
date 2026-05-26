@@ -1,0 +1,17 @@
+[
+  {
+    "requestId": "CFR-0001",
+    "ticketId": "T-0001",
+    "ticketChannelId": "1508780782871777360",
+    "targetUserId": "1454844507097927743",
+    "targetTag": "rolfsalt_00605",
+    "requesterUserId": "1231076349007892520",
+    "requesterTag": "rolf_4270",
+    "reason": "IA investigation",
+    "status": "Pending",
+    "approvedByUserId": null,
+    "approvedByTag": null,
+    "createdAt": "2026-05-26T10:36:23.908Z",
+    "updatedAt": "2026-05-26T10:36:23.908Z"
+  }
+]

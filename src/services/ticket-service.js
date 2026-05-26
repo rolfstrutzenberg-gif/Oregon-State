@@ -20,6 +20,18 @@ function findTicketByChannelId(channelId) {
   return readTickets().find((ticket) => ticket.channelId === channelId && ticket.status === "Open") || null;
 }
 
+function updateTicket(ticketId, patch) {
+  const tickets = readTickets();
+  const ticket = tickets.find((entry) => entry.ticketId === ticketId);
+  if (!ticket) {
+    return null;
+  }
+
+  Object.assign(ticket, patch, { updatedAt: new Date().toISOString() });
+  writeTickets(tickets);
+  return ticket;
+}
+
 function resolveRole(guild, explicitId, fallbackNames = []) {
   if (explicitId) {
     return guild.roles.cache.get(explicitId) || null;
@@ -126,4 +138,5 @@ module.exports = {
   createTicketChannel,
   findTicketByChannelId,
   readTickets,
+  updateTicket,
 };

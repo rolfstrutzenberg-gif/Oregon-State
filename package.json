@@ -12,6 +12,7 @@
     "import:layout": "node scripts/import-layout.js",
     "import:roles": "node scripts/import-role-matrix.js",
     "import:channels": "node scripts/import-channel-matrix.js",
+    "casefiles:backfill": "node scripts/backfill-case-files.js",
     "permissions:unverified": "node scripts/enforce-unverified-visibility.js",
     "snapshot:guild": "node scripts/snapshot-guild.js",
     "restore:guild": "node scripts/restore-guild.js"
