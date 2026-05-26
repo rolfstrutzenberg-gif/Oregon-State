@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "verification-portal/api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/verification-portal/api/roblox/start"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/verification-portal/api/$1"
+    }
+  ]
+}
