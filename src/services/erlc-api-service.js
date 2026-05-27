@@ -22,17 +22,29 @@ function erlcHeaders(hasBody = false) {
 }
 
 function normalizeCommand(command) {
-  const value = String(command || "").trim();
+  let value = String(command || "").trim();
   if (!value) {
     throw new Error("Command is required.");
   }
 
+  if (value.startsWith("/")) {
+    value = value.replace(/^\/+/, "");
+  }
+
   if (!value.startsWith(":") && !value.startsWith(";")) {
-    throw new Error("ER:LC commands must start with : or ;");
+    value = `:${value}`;
   }
 
   if (value.length > MAX_COMMAND_LENGTH) {
     throw new Error(`ER:LC commands must stay under ${MAX_COMMAND_LENGTH} characters.`);
+  }
+
+  const [commandName, ...args] = value.slice(1).trim().split(/\s+/);
+  const lowerCommandName = commandName.toLowerCase();
+  const commandsThatNeedText = new Set(["h", "hint", "m", "message", "pm"]);
+
+  if (commandsThatNeedText.has(lowerCommandName) && args.join(" ").trim().length === 0) {
+    throw new Error(`:${commandName} needs text after it.`);
   }
 
   return value;
@@ -83,6 +95,26 @@ async function sendErlcCommand(command) {
     method: "POST",
     body: { command: normalized },
   });
+}
+
+async function fetchCommandLogs() {
+  const response = await requestErlc("/v1/server/commandlogs");
+  return Array.isArray(response.data) ? response.data : [];
+}
+
+async function findRecentRemoteCommand(command) {
+  const normalized = normalizeCommand(command);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const logs = await fetchCommandLogs();
+
+  return logs
+    .slice()
+    .reverse()
+    .find((entry) =>
+      entry?.Player === "Remote Server"
+      && entry?.Command === normalized
+      && Number(entry?.Timestamp || 0) >= nowSeconds - 120
+    ) || null;
 }
 
 async function fetchModCalls() {
@@ -145,7 +177,9 @@ function buildTeleportCommand(responder, caller) {
 
 module.exports = {
   buildTeleportCommand,
+  fetchCommandLogs,
   fetchModCalls,
+  findRecentRemoteCommand,
   isRobloxUserId,
   normalizeCommand,
   normalizeModCallEntry,

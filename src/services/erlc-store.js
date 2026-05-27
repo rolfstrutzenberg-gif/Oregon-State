@@ -41,6 +41,7 @@ function recordCommandLog(entry) {
     command: entry.command,
     status: entry.status || "Sent",
     apiStatus: entry.apiStatus || null,
+    erlcCommandLoggedAt: entry.erlcCommandLoggedAt || null,
     error: entry.error || null,
     reason: entry.reason || null,
     source: entry.source || "Dashboard",

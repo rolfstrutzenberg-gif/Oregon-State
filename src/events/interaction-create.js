@@ -83,7 +83,9 @@ const {
 } = require("../utils/sessions-panel");
 const {
   buildTeleportCommand,
+  findRecentRemoteCommand,
   isRobloxUserId,
+  normalizeCommand,
   sendErlcCommand,
 } = require("../services/erlc-api-service");
 const {
@@ -232,16 +234,21 @@ async function resolveCasesChannel(interaction) {
 }
 
 async function runCommandWithLog({ interaction, command, reason, source, modCallId }) {
+  let normalizedCommand = command;
+
   try {
-    const response = await sendErlcCommand(command);
+    normalizedCommand = normalizeCommand(command);
+    const response = await sendErlcCommand(normalizedCommand);
+    const commandLog = await findRecentRemoteCommand(normalizedCommand).catch(() => null);
     const record = recordCommandLog({
-      command,
+      command: normalizedCommand,
       reason,
       source,
       modCallId,
       actorUser: interaction.user,
       status: "Sent",
       apiStatus: response.status,
+      erlcCommandLoggedAt: commandLog?.Timestamp || null,
     });
 
     await sendCommandLog(interaction.client, record);
@@ -251,7 +258,7 @@ async function runCommandWithLog({ interaction, command, reason, source, modCall
     };
   } catch (error) {
     const record = recordCommandLog({
-      command,
+      command: normalizedCommand,
       reason,
       source,
       modCallId,

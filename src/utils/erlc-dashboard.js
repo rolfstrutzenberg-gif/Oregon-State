@@ -92,7 +92,7 @@ function createErlcCommandModal() {
           .setMinLength(2)
           .setMaxLength(120)
           .setRequired(true)
-          .setPlaceholder(":h Session is starting."),
+          .setPlaceholder("h Session is starting"),
       ),
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
@@ -173,6 +173,7 @@ function createCommandLogMessage(record) {
             `Command: \`${record.command}\``,
             `Actor: ${record.actorUserId ? `<@${record.actorUserId}>` : record.actorTag || "Unknown"}`,
             `Source: ${record.source}`,
+            record.erlcCommandLoggedAt ? `ER:LC Log: <t:${record.erlcCommandLoggedAt}:R>` : null,
             record.modCallId ? `Mod Call: ${record.modCallId}` : null,
             record.reason ? `Reason: ${record.reason}` : null,
             record.error ? `Error: ${record.error}` : null,
