@@ -83,6 +83,7 @@ const {
 } = require("../utils/sessions-panel");
 const {
   buildTeleportCommand,
+  isRobloxUserId,
   sendErlcCommand,
 } = require("../services/erlc-api-service");
 const {
@@ -378,21 +379,30 @@ module.exports = {
       }
 
       const verification = findVerificationByDiscordUserId(interaction.user.id);
-      if (!verification?.robloxUserId) {
+      if (!verification?.robloxUserId || !isRobloxUserId(verification.robloxUserId)) {
         await interaction.editReply({
-          content: "You need a stored Roblox verification record before the bot can teleport you to a mod call.",
+          content: "You need a valid Roblox verification record before the bot can teleport you to a mod call.",
         });
         return;
       }
 
-      if (!modCall.callerRobloxUserId) {
+      if (!modCall.callerRobloxUserId || !isRobloxUserId(modCall.callerRobloxUserId)) {
         await interaction.editReply({
           content: "That mod call did not include a caller Roblox ID, so I cannot build a safe teleport command.",
         });
         return;
       }
 
-      const command = buildTeleportCommand(verification.robloxUserId, modCall.callerRobloxUserId);
+      const command = buildTeleportCommand(
+        {
+          robloxUserId: verification.robloxUserId,
+          username: verification.robloxUsername,
+        },
+        {
+          robloxUserId: modCall.callerRobloxUserId,
+          username: modCall.callerUsername,
+        },
+      );
       const result = await runCommandWithLog({
         interaction,
         command,

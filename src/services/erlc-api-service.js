@@ -86,8 +86,8 @@ async function sendErlcCommand(command) {
 }
 
 async function fetchModCalls() {
-  const response = await requestErlc("/v1/server/modcalls");
-  return Array.isArray(response.data) ? response.data : [];
+  const response = await requestErlc("/v2/server?ModCalls=true");
+  return Array.isArray(response.data?.ModCalls) ? response.data.ModCalls : [];
 }
 
 function parsePlayerLabel(label) {
@@ -127,17 +127,26 @@ function normalizeModCallEntry(entry) {
   };
 }
 
-function buildTeleportCommand(responderRobloxUserId, callerRobloxUserId) {
-  if (!responderRobloxUserId || !callerRobloxUserId) {
-    throw new Error("Both Roblox user IDs are required to respond.");
+function isRobloxUserId(value) {
+  return /^\d+$/.test(String(value || ""));
+}
+
+function buildTeleportCommand(responder, caller) {
+  if (!isRobloxUserId(responder?.robloxUserId) || !isRobloxUserId(caller?.robloxUserId)) {
+    throw new Error("Both Roblox user IDs must be verified before responding.");
   }
 
-  return `:tp ${responderRobloxUserId} ${callerRobloxUserId}`;
+  if (!responder?.username || !caller?.username) {
+    throw new Error("Both Roblox usernames are required to build the teleport command.");
+  }
+
+  return `:tp ${responder.username} ${caller.username}`;
 }
 
 module.exports = {
   buildTeleportCommand,
   fetchModCalls,
+  isRobloxUserId,
   normalizeCommand,
   normalizeModCallEntry,
   requestErlc,

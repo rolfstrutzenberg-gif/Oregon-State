@@ -1,6 +1,7 @@
 const { PermissionFlagsBits, SlashCommandBuilder } = require("discord.js");
 const { moveMemberToPendingRules, resolveRulesChannel } = require("../services/onboarding-service");
 const { saveVerification } = require("../services/verification-store");
+const { isRobloxUserId } = require("../services/erlc-api-service");
 const { createRulesReferralMessage } = require("../utils/rules-referral-message");
 const { createBaseEmbed } = require("../utils/embed-factory");
 
@@ -33,6 +34,13 @@ module.exports = {
     const robloxUsername = interaction.options.getString("username", true);
     const robloxDisplayName = interaction.options.getString("display_name", true);
     const robloxUserId = interaction.options.getString("roblox_user_id", true);
+
+    if (!isRobloxUserId(robloxUserId)) {
+      await interaction.editReply({
+        content: "Roblox user ID must be numbers only.",
+      });
+      return;
+    }
 
     const record = saveVerification({
       discordUserId: interaction.user.id,
