@@ -1,4 +1,4 @@
-const { Events } = require("discord.js");
+const { Events, PermissionFlagsBits } = require("discord.js");
 const { findAcceptanceByDiscordUserId, saveAcceptance } = require("../services/rules-acceptance-store");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
 const { grantFullAccess } = require("../services/onboarding-service");
@@ -81,6 +81,35 @@ const {
   createSessionInfoMessage,
   createSessionVotePanel,
 } = require("../utils/sessions-panel");
+const {
+  buildTeleportCommand,
+  sendErlcCommand,
+} = require("../services/erlc-api-service");
+const {
+  findModCall,
+  pendingModCalls,
+  recentCommandLogs,
+  recordCommandLog,
+  updateModCall,
+} = require("../services/erlc-store");
+const {
+  relayModCalls,
+  sendCommandLog,
+} = require("../services/erlc-discord-service");
+const {
+  ERLC_COMMAND_BUTTON_ID,
+  ERLC_COMMAND_INPUT_ID,
+  ERLC_COMMAND_MODAL_ID,
+  ERLC_COMMAND_REASON_ID,
+  ERLC_MODCALL_RESPOND_PREFIX,
+  ERLC_PENDING_MODCALLS_ID,
+  ERLC_RECENT_COMMANDS_ID,
+  ERLC_REFRESH_MODCALLS_ID,
+  createErlcCommandModal,
+  createModCallMessage,
+  createPendingModCallsMessage,
+  createRecentCommandsMessage,
+} = require("../utils/erlc-dashboard");
 
 const logger = createLogger("interaction");
 
@@ -131,6 +160,14 @@ async function resolveInteractionGuild(interaction) {
 
 function cleanLookupValue(value) {
   return String(value || "").trim().replace(/[<@!>&]/g, "");
+}
+
+function canUseErlcControls(interaction) {
+  if (!interaction.inGuild()) {
+    return false;
+  }
+
+  return interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) || false;
 }
 
 async function resolveMemberFromQuery(guild, query) {
@@ -193,9 +230,203 @@ async function resolveCasesChannel(interaction) {
   return guild.channels.cache.find((channel) => channel.isTextBased?.() && channel.name === "📁｜cases") || null;
 }
 
+async function runCommandWithLog({ interaction, command, reason, source, modCallId }) {
+  try {
+    const response = await sendErlcCommand(command);
+    const record = recordCommandLog({
+      command,
+      reason,
+      source,
+      modCallId,
+      actorUser: interaction.user,
+      status: "Sent",
+      apiStatus: response.status,
+    });
+
+    await sendCommandLog(interaction.client, record);
+    return {
+      ok: true,
+      record,
+    };
+  } catch (error) {
+    const record = recordCommandLog({
+      command,
+      reason,
+      source,
+      modCallId,
+      actorUser: interaction.user,
+      status: "Failed",
+      apiStatus: error.status || null,
+      error: error.message,
+    });
+
+    await sendCommandLog(interaction.client, record);
+    return {
+      ok: false,
+      record,
+      error,
+    };
+  }
+}
+
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === ERLC_COMMAND_BUTTON_ID) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.showModal(createErlcCommandModal());
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === ERLC_COMMAND_MODAL_ID) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const command = interaction.fields.getTextInputValue(ERLC_COMMAND_INPUT_ID);
+      const reason = interaction.fields.getTextInputValue(ERLC_COMMAND_REASON_ID);
+      const result = await runCommandWithLog({
+        interaction,
+        command,
+        reason,
+        source: "Dashboard",
+      });
+
+      await interaction.editReply({
+        content: result.ok
+          ? `Command sent and logged as ${result.record.commandId}.`
+          : `Command failed and was logged as ${result.record.commandId}: ${result.error.message}`,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === ERLC_REFRESH_MODCALLS_ID) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      try {
+        const relayed = await relayModCalls(interaction.client);
+        await interaction.editReply({
+          content: relayed.length > 0
+            ? `Relayed ${relayed.length} new mod call(s).`
+            : "No new mod calls found.",
+        });
+      } catch (error) {
+        logger.error("Manual mod call refresh failed.", error);
+        await interaction.editReply({
+          content: `Mod call refresh failed: ${error.message}`,
+        });
+      }
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === ERLC_RECENT_COMMANDS_ID) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.reply({
+        ...createRecentCommandsMessage(recentCommandLogs()),
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId === ERLC_PENDING_MODCALLS_ID) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.reply({
+        ...createPendingModCallsMessage(pendingModCalls()),
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(ERLC_MODCALL_RESPOND_PREFIX)) {
+      if (!canUseErlcControls(interaction)) {
+        await interaction.reply({ content: "You do not have access to respond to ER:LC mod calls.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const modCallId = interaction.customId.slice(ERLC_MODCALL_RESPOND_PREFIX.length);
+      const modCall = findModCall(modCallId);
+      if (!modCall) {
+        await interaction.editReply({ content: "That mod call record was not found." });
+        return;
+      }
+
+      if (modCall.status === "Responded") {
+        await interaction.editReply({ content: "That mod call has already been responded to." });
+        return;
+      }
+
+      const verification = findVerificationByDiscordUserId(interaction.user.id);
+      if (!verification?.robloxUserId) {
+        await interaction.editReply({
+          content: "You need a stored Roblox verification record before the bot can teleport you to a mod call.",
+        });
+        return;
+      }
+
+      if (!modCall.callerRobloxUserId) {
+        await interaction.editReply({
+          content: "That mod call did not include a caller Roblox ID, so I cannot build a safe teleport command.",
+        });
+        return;
+      }
+
+      const command = buildTeleportCommand(verification.robloxUserId, modCall.callerRobloxUserId);
+      const result = await runCommandWithLog({
+        interaction,
+        command,
+        reason: `Responding to mod call from ${modCall.callerUsername || modCall.callerRobloxUserId}.`,
+        source: "Mod Call Response",
+        modCallId,
+      });
+
+      if (!result.ok) {
+        await interaction.editReply({
+          content: `Response failed: ${result.error.message}`,
+        });
+        return;
+      }
+
+      const updated = updateModCall(modCallId, {
+        status: "Responded",
+        responderDiscordUserId: interaction.user.id,
+        responderDiscordTag: interaction.user.tag,
+        responderRobloxUserId: verification.robloxUserId,
+        responseCommand: command,
+        respondedAt: new Date().toISOString(),
+      });
+
+      if (interaction.message?.editable && updated) {
+        await interaction.message.edit(createModCallMessage(updated)).catch(() => null);
+      }
+
+      await interaction.editReply({
+        content: `Responding to ${modCall.callerUsername || "the caller"}. Command logged as ${result.record.commandId}.`,
+      });
+      return;
+    }
+
     if (interaction.isButton() && interaction.customId.startsWith(SESSION_INFO_PREFIX)) {
       const sessionId = interaction.customId.slice(SESSION_INFO_PREFIX.length);
       const activeSession = getActiveSession();

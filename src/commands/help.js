@@ -19,6 +19,7 @@ module.exports = {
       { name: "/selfroles", value: "Post the self-role panel." },
       { name: "/session", value: "Open, close, vote, and check session status." },
       { name: "/sessions", value: "Post the mock session panel." },
+      { name: "/erlc-dashboard", value: "Post the ER:LC command and mod call dashboard." },
       { name: "/ticket", value: "Create a basic staff ticket." },
       { name: "/case-dashboard", value: "Post the case files dashboard." },
       { name: "/case-backfill", value: "Backfill case files for current members." },
