@@ -1,4 +1,71 @@
 {
-  "commands": [],
-  "modCalls": []
+  "commands": [
+    {
+      "commandId": "CMD-0001",
+      "command": ":h",
+      "status": "Failed",
+      "apiStatus": 422,
+      "error": "The private server is currently offline.",
+      "reason": "Huya",
+      "source": "Dashboard",
+      "modCallId": null,
+      "actorUserId": "1231076349007892520",
+      "actorTag": "rolf_4270",
+      "createdAt": "2026-05-27T00:15:25.376Z"
+    },
+    {
+      "commandId": "CMD-0002",
+      "command": ":h",
+      "status": "Sent",
+      "apiStatus": 200,
+      "error": null,
+      "reason": "StartUp!",
+      "source": "Dashboard",
+      "modCallId": null,
+      "actorUserId": "1231076349007892520",
+      "actorTag": "rolf_4270",
+      "createdAt": "2026-05-27T00:21:53.144Z"
+    },
+    {
+      "commandId": "CMD-0003",
+      "command": ":tp hi 1848078796",
+      "status": "Sent",
+      "apiStatus": 200,
+      "error": null,
+      "reason": "Responding to mod call from rolfryan.",
+      "source": "Mod Call Response",
+      "modCallId": "MC-CBC35A8943",
+      "actorUserId": "1231076349007892520",
+      "actorTag": "rolf_4270",
+      "createdAt": "2026-05-27T00:22:29.640Z"
+    }
+  ],
+  "modCalls": [
+    {
+      "modCallId": "MC-CBC35A8943",
+      "sourceKey": "1779841336:rolfryan:1848078796",
+      "status": "Responded",
+      "callerRaw": "rolfryan:1848078796",
+      "callerUsername": "rolfryan",
+      "callerRobloxUserId": "1848078796",
+      "moderatorRaw": null,
+      "moderatorUsername": null,
+      "moderatorRobloxUserId": null,
+      "timestamp": 1779841336,
+      "receivedAt": "2026-05-27T00:22:20.425Z",
+      "relayedAt": "2026-05-27T00:22:20.927Z",
+      "relayChannelId": "1508550055630733583",
+      "relayMessageId": "1508988696064692324",
+      "responderDiscordUserId": "1231076349007892520",
+      "responderDiscordTag": "rolf_4270",
+      "responderRobloxUserId": "hi",
+      "responseCommand": ":tp hi 1848078796",
+      "respondedAt": "2026-05-27T00:22:29.905Z",
+      "raw": {
+        "Caller": "rolfryan:1848078796",
+        "Timestamp": 1779841336
+      },
+      "updatedAt": "2026-05-27T00:22:29.905Z"
+    }
+  ]
 }
