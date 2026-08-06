@@ -31,6 +31,8 @@ Use this redirect URI in the Roblox OAuth app:
 https://oregon-state-verification.vercel.app/api/roblox/callback
 ```
 
-## Current Limitation
+## Discord Handoff
 
-This portal can complete Roblox OAuth and read the Roblox user profile. The next bridge is tying a Discord user ID to the OAuth session so the bot knows exactly which Discord member to update after Roblox redirects back.
+The Discord verification button creates a signed, ten-minute launch URL. The portal validates it, preserves the Discord user and guild through Roblox OAuth, then posts the verified Roblox profile to `BOT_VERIFICATION_CALLBACK_URL`.
+
+The callback URL must publicly reach the bot's `/verification/callback` endpoint. Use the same `BOT_VERIFICATION_CALLBACK_SECRET` in the bot and Vercel environments.

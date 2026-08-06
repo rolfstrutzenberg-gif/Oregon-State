@@ -1,86 +1,85 @@
-const fs = require("node:fs");
 const {
-  ActionRowBuilder,
-  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
   MessageFlags,
   SectionBuilder,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
   TextDisplayBuilder,
 } = require("discord.js");
 const { loadVerificationConfig, verificationReadiness } = require("../services/verification-config");
+const { VERIFICATION_START_BUTTON_ID } = require("./verification-flow");
 const { accentColor } = require("../constants/branding");
-
-function buildBannerFiles(config) {
-  if (!config.verifyBannerPath || !fs.existsSync(config.verifyBannerPath)) {
-    return { files: [], bannerUrl: config.verifyBannerUrl || null };
-  }
-
-  const fileName = "verification-banner.png";
-  return {
-    files: [new AttachmentBuilder(config.verifyBannerPath, { name: fileName })],
-    bannerUrl: `attachment://${fileName}`,
-  };
-}
+const {
+  createMediaAsset,
+  footerText,
+  panelDescription,
+  panelDivider,
+  panelHeading,
+  prependBanner,
+} = require("./panel-style");
 
 function createVerificationPanelMessage() {
   const config = loadVerificationConfig();
   const readiness = verificationReadiness(config);
-  const { files, bannerUrl } = buildBannerFiles(config);
-  const portalUrl = config.verifyPortalUrl || "https://roblox.com";
+  const banner = createMediaAsset({
+    localPath: config.verifyBannerPath,
+    remoteUrl: config.verifyBannerUrl,
+    fileName: "verification-banner.png",
+  });
+  const isReady = Boolean(config.verifyPortalUrl && config.callbackSecret);
+  const button = isReady
+    ? new ButtonBuilder()
+      .setLabel(`${config.verifyPanelButtonText} →`)
+      .setStyle(ButtonStyle.Primary)
+      .setCustomId(VERIFICATION_START_BUTTON_ID)
+    : new ButtonBuilder()
+      .setCustomId("verification:setup-pending")
+      .setLabel("Verification Setup Pending")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true);
 
-  const mediaGallery = new MediaGalleryBuilder().addItems(
-    new MediaGalleryItemBuilder().setURL(bannerUrl || config.verifyBannerUrl || "https://example.com"),
-  );
+  const body = new ContainerBuilder().setAccentColor(accentColor);
+  prependBanner(body, banner.url);
 
-  const button = new ButtonBuilder()
-    .setLabel(`${config.verifyPanelButtonText} →`)
-    .setStyle(ButtonStyle.Link)
-    .setURL(portalUrl);
-
-  const body = new ContainerBuilder()
-    .setAccentColor(accentColor)
+  body
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${config.verifyBrandText}`),
-      new TextDisplayBuilder().setContent("Verification required."),
-      new TextDisplayBuilder().setContent("Verify your Roblox account to continue into Oregon State Roleplay."),
+      new TextDisplayBuilder().setContent(panelHeading(config.verifyPanelTitle, config.verifyBrandText)),
+      new TextDisplayBuilder().setContent(
+        panelDescription("Link your Roblox account before entering the rest of the server."),
+      ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setDivider(true)
-        .setSpacing(SeparatorSpacingSize.Small),
+      panelDivider(),
     )
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `## ${config.verifyPanelTitle}`,
+            isReady ? "## Start Verification" : "## Verification Unavailable",
           ),
-          new TextDisplayBuilder().setContent("Continue with the button on the right."),
+          new TextDisplayBuilder().setContent(
+            isReady
+              ? "Continue through Roblox, then return to Discord."
+              : "Staff are finishing the Roblox connection. Check back shortly.",
+          ),
         )
         .setButtonAccessory(button),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setDivider(false)
-        .setSpacing(SeparatorSpacingSize.Small),
+      panelDivider({ visible: false }),
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
+      footerText(),
     );
 
   return {
-    files,
+    files: banner.files,
     flags: MessageFlags.IsComponentsV2,
-    components: [mediaGallery, body],
+    components: [body],
     readiness: {
       ...readiness,
-      hasPortalUrl: true,
+      hasPortalUrl: Boolean(config.verifyPortalUrl),
+      isReady,
     },
   };
 }

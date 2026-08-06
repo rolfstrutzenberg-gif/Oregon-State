@@ -26,6 +26,12 @@ function findVerificationByDiscordUserId(discordUserId) {
   return readAllVerifications().find((record) => record.discordUserId === discordUserId) || null;
 }
 
+function findVerificationByRobloxUserId(robloxUserId) {
+  return readAllVerifications().find(
+    (record) => String(record.robloxUserId) === String(robloxUserId),
+  ) || null;
+}
+
 function saveVerification(record) {
   const records = readAllVerifications();
   const nextRecords = records.filter((entry) => entry.discordUserId !== record.discordUserId);
@@ -37,6 +43,7 @@ function saveVerification(record) {
 module.exports = {
   ensureStore,
   findVerificationByDiscordUserId,
+  findVerificationByRobloxUserId,
   readAllVerifications,
   saveVerification,
 };

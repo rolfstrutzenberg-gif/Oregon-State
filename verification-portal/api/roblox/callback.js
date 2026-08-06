@@ -1,5 +1,6 @@
 const { loadPortalConfig } = require("../_lib/config");
 const { escapeHtml, sendHtml } = require("../_lib/html");
+const { decodeContext } = require("../_lib/verification-context");
 
 const tokenUrl = "https://apis.roblox.com/oauth/v1/token";
 const userInfoUrl = "https://apis.roblox.com/oauth/v1/userinfo";
@@ -58,11 +59,7 @@ async function fetchUserInfo(accessToken) {
   return response.json();
 }
 
-async function notifyBot(config, profile) {
-  if (!config.botCallbackUrl || !config.botCallbackSecret) {
-    return false;
-  }
-
+async function notifyBot(config, profile, context) {
   const response = await fetch(config.botCallbackUrl, {
     method: "POST",
     headers: {
@@ -70,6 +67,8 @@ async function notifyBot(config, profile) {
       "x-osrp-verification-secret": config.botCallbackSecret,
     },
     body: JSON.stringify({
+      discordUserId: context.discordUserId,
+      guildId: context.guildId,
       robloxUserId: profile.sub,
       robloxUsername: profile.preferred_username || profile.name || profile.sub,
       robloxDisplayName: profile.name || profile.preferred_username || profile.sub,
@@ -79,10 +78,16 @@ async function notifyBot(config, profile) {
   });
 
   if (!response.ok) {
-    throw new Error(`Bot callback failed: ${response.status} ${await response.text()}`);
+    const body = await response.json().catch(() => null);
+    const error = new Error(body?.error || "The Discord verification service did not accept the account.");
+    error.code = response.status === 409
+      ? "ACCOUNT_CONFLICT"
+      : response.status === 404
+        ? "MEMBER_NOT_FOUND"
+        : "CALLBACK_FAILED";
+    throw error;
   }
 
-  return true;
 }
 
 module.exports = async function handler(request, response) {
@@ -90,11 +95,19 @@ module.exports = async function handler(request, response) {
   try {
     config = loadPortalConfig();
   } catch (error) {
+    console.error("Verification portal configuration error:", error);
     sendHtml(
       response,
       500,
       "Verification Not Ready",
-      `<h1>Verification Not Ready</h1><p>${escapeHtml(error.message)}</p>`,
+      `<p class="result-kicker">System unavailable</p>
+      <h1>Verification is offline.</h1>
+      <p>The Roblox connection is not ready right now. Return to Discord and let staff know.</p>
+      <div class="result-actions">
+        <a class="button button-primary" href="https://discord.com/channels/1508482350764523530/1508549978493026444">Return to Discord <span aria-hidden="true">&#8599;</span></a>
+      </div>
+      <div class="result-meta">OSRP Verification / Configuration</div>`,
+      { tone: "danger" },
     );
     return;
   }
@@ -103,42 +116,77 @@ module.exports = async function handler(request, response) {
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
   const savedState = cookieValue(request, "osrp_oauth_state");
+  const savedContext = cookieValue(request, "osrp_verification_context");
 
-  if (!code || !state || !savedState || state !== savedState) {
+  if (!code || !state || !savedState || !savedContext || state !== savedState) {
     sendHtml(
       response,
       400,
       "Verification Failed",
-      "<h1>Verification Failed</h1><p>The verification session expired or was invalid. Return to Discord and start again.</p>",
+      `<p class="result-kicker">Session expired</p>
+      <h1>Verification failed.</h1>
+      <p>This verification session is no longer valid. Return to Discord and create a new link.</p>
+      <div class="result-actions">
+        <a class="button button-primary" href="https://discord.com/channels/1508482350764523530/1508549978493026444">Try again in Discord <span aria-hidden="true">&#8599;</span></a>
+      </div>
+      <div class="result-meta">OSRP Verification / Invalid session</div>`,
+      { tone: "danger" },
     );
     return;
   }
 
   try {
+    const context = decodeContext(savedContext, config.botCallbackSecret);
     const token = await exchangeCode(config, code);
     const profile = await fetchUserInfo(token.access_token);
-    const notifiedBot = await notifyBot(config, profile);
+    await notifyBot(config, profile, context);
+
+    const clearedCookies = [
+      "osrp_oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
+      "osrp_verification_context=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
+    ];
 
     if (config.successRedirectUrl) {
       response.statusCode = 302;
-      response.setHeader("set-cookie", ["osrp_oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"]);
+      response.setHeader("set-cookie", clearedCookies);
       response.setHeader("location", config.successRedirectUrl);
       response.end();
       return;
     }
 
+    response.setHeader("set-cookie", clearedCookies);
     sendHtml(
       response,
       200,
       "Verification Complete",
-      `<h1>Verification Complete</h1><p>Roblox account linked as <strong>${escapeHtml(profile.preferred_username || profile.name || profile.sub)}</strong>. ${notifiedBot ? "You can return to Discord now." : "The Discord bot handoff is not connected yet."}</p>`,
+      `<p class="result-kicker">Account connected</p>
+      <h1>Verification complete.</h1>
+      <p>Roblox account linked as <strong>${escapeHtml(profile.preferred_username || profile.name || profile.sub)}</strong>. Return to Discord and accept the rules to unlock the server.</p>
+      <div class="result-actions">
+        <a class="button button-primary" href="https://discord.com/channels/1508482350764523530/1508549979902312489">Read the rules <span aria-hidden="true">&#8599;</span></a>
+        <a class="text-link" href="/">Verification home</a>
+      </div>
+      <div class="result-meta">OSRP Verification / Complete</div>`,
     );
   } catch (error) {
+    console.error("Roblox verification failed:", error);
+    const message = error.code === "ACCOUNT_CONFLICT"
+      ? "That Discord or Roblox account is already connected to another account. Contact Management if you need the link reviewed."
+      : error.code === "MEMBER_NOT_FOUND"
+        ? "Your Discord account could not be found in Oregon State Roleplay. Rejoin the server, then start verification again."
+        : "The account could not be linked right now. Return to Discord and try again in a moment.";
     sendHtml(
       response,
       500,
       "Verification Failed",
-      `<h1>Verification Failed</h1><p>${escapeHtml(error.message)}</p>`,
+      `<p class="result-kicker">Connection failed</p>
+      <h1>Verification failed.</h1>
+      <p>${escapeHtml(message)}</p>
+      <div class="result-actions">
+        <a class="button button-primary" href="https://discord.com/channels/1508482350764523530/1508549978493026444">Return to Discord <span aria-hidden="true">&#8599;</span></a>
+      </div>
+      <div class="result-meta">OSRP Verification / Error</div>`,
+      { tone: "danger" },
     );
   }
 };

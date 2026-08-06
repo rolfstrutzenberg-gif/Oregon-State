@@ -7,84 +7,46 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-const tones = {
-  default: {
-    accent: "#0b3d24",
-    line: "#1c3325",
-    glow: "#132217",
-  },
-  danger: {
-    accent: "#7f1d1d",
-    line: "#4c1d1d",
-    glow: "#2a1111",
-  },
-};
-
 function page(title, body, options = {}) {
-  const tone = tones[options.tone] || tones.default;
+  const tone = options.tone === "danger" ? "danger" : "default";
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${escapeHtml(title)}</title>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #070908;
-        --panel: #111612;
-        --line: #1c3325;
-        --text: #f4f6f3;
-        --muted: #a6afa8;
-        --accent: ${tone.accent};
-        --line: ${tone.line};
-        --glow: ${tone.glow};
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        min-height: 100vh;
-        margin: 0;
-        display: grid;
-        place-items: center;
-        background: radial-gradient(circle at top, var(--glow) 0, var(--bg) 42rem);
-        color: var(--text);
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
-
-      main {
-        width: min(92vw, 560px);
-        border: 1px solid var(--line);
-        border-left: 6px solid var(--accent);
-        background: color-mix(in srgb, var(--panel) 92%, black);
-        padding: 28px;
-      }
-
-      h1 {
-        margin: 0 0 12px;
-        font-size: clamp(28px, 6vw, 46px);
-        line-height: 1;
-        letter-spacing: 0;
-      }
-
-      p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.55;
-      }
-
-      a {
-        color: var(--text);
-      }
-    </style>
+    <meta name="theme-color" content="#07110b">
+    <meta name="robots" content="noindex, nofollow">
+    <title>${escapeHtml(title)} | OSRP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/site.css">
   </head>
-  <body>
-    <main>${body}</main>
+  <body class="result-body">
+    <div class="atmosphere" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Oregon State Roleplay home">
+        <span class="brand-mark">OSRP</span>
+        <span class="brand-copy">Oregon State Roleplay</span>
+      </a>
+      <div class="service-state" data-ready="true">
+        <span class="state-dot"></span>
+        <span>Official verification</span>
+      </div>
+    </header>
+    <main class="result-main">
+      <section class="result-panel" data-tone="${tone}">
+        <div class="result-banner">
+          <img src="/assets/banners/verification.png" alt="Oregon State Roleplay verification">
+        </div>
+        <div class="result-content">${body}</div>
+      </section>
+    </main>
+    <footer class="site-footer shell">
+      <span>Oregon State Roleplay</span>
+      <span>EST 2026</span>
+    </footer>
   </body>
 </html>`;
 }
@@ -92,10 +54,15 @@ function page(title, body, options = {}) {
 function sendHtml(response, statusCode, title, body, options = {}) {
   response.statusCode = statusCode;
   response.setHeader("content-type", "text/html; charset=utf-8");
+  response.setHeader("cache-control", "no-store");
+  response.setHeader("x-content-type-options", "nosniff");
+  response.setHeader("x-frame-options", "DENY");
+  response.setHeader("referrer-policy", "no-referrer");
   response.end(page(title, body, options));
 }
 
 module.exports = {
   escapeHtml,
+  page,
   sendHtml,
 };

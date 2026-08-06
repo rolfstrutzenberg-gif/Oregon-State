@@ -1,7 +1,18 @@
 const { Events, PermissionFlagsBits } = require("discord.js");
 const { findAcceptanceByDiscordUserId, saveAcceptance } = require("../services/rules-acceptance-store");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
+const {
+  VERIFICATION_START_BUTTON_ID,
+  createVerificationLaunchMessage,
+} = require("../utils/verification-flow");
 const { grantFullAccess } = require("../services/onboarding-service");
+const { canApply } = require("../services/application-eligibility-service");
+const {
+  createStaffApplication,
+  findPendingApplicationByUserId,
+  findStaffApplication,
+  updateStaffApplication,
+} = require("../services/staff-application-service");
 const {
   createAccessRequest,
   addIncident,
@@ -16,7 +27,8 @@ const {
   updateCaseFile,
   updateAccessRequest,
 } = require("../services/case-file-service");
-const { findTicketByChannelId, updateTicket } = require("../services/ticket-service");
+const { createTicketChannel, findTicketByChannelId, updateTicket } = require("../services/ticket-service");
+const { enterGiveaway, findGiveaway } = require("../services/giveaway-service");
 const { isLogExemptUser } = require("../services/log-exemption-service");
 const { createLogger } = require("../utils/logger");
 const {
@@ -113,6 +125,35 @@ const {
   createPendingModCallsMessage,
   createRecentCommandsMessage,
 } = require("../utils/erlc-dashboard");
+const {
+  SUPPORT_DETAILS_ID,
+  SUPPORT_PROOF_ID,
+  SUPPORT_ROBLOX_ID,
+  SUPPORT_SUMMARY_ID,
+  SUPPORT_TICKET_MODAL_PREFIX,
+  SUPPORT_TICKET_PREFIX,
+  SUPPORT_TICKET_SELECT_ID,
+  createSupportTicketModal,
+  createTicketOpenedMessage,
+  ticketTypes,
+} = require("../utils/support-tickets");
+const {
+  GIVEAWAY_JOIN_PREFIX,
+  createGiveawayPanel,
+} = require("../utils/giveaway-panel");
+const {
+  STAFF_APPLICATION_APPROVE_PREFIX,
+  STAFF_APPLICATION_AVAILABILITY_ID,
+  STAFF_APPLICATION_DENY_PREFIX,
+  STAFF_APPLICATION_EXPERIENCE_ID,
+  STAFF_APPLICATION_MODAL_ID,
+  STAFF_APPLICATION_MOTIVATION_ID,
+  STAFF_APPLICATION_OPEN_ID,
+  STAFF_APPLICATION_ROBLOX_ID,
+  STAFF_APPLICATION_SCENARIO_ID,
+  createStaffApplicationModal,
+  createStaffApplicationReviewMessage,
+} = require("../utils/staff-application");
 
 const logger = createLogger("interaction");
 
@@ -140,6 +181,74 @@ async function notifyCaseFileRequest(interaction, request) {
   for (const recipient of recipients) {
     await recipient.send(message).catch(() => null);
   }
+}
+
+function resolveVerifiedRole(guild) {
+  if (process.env.VERIFIED_ROLE_ID) {
+    return guild.roles.cache.get(process.env.VERIFIED_ROLE_ID) || null;
+  }
+
+  return guild.roles.cache.find((role) => role.name === "➟ Verified Community Member") || null;
+}
+
+function memberMeetsGiveawayGate(interaction, giveaway) {
+  if (!giveaway.requireVerified) {
+    return true;
+  }
+
+  const verifiedRole = resolveVerifiedRole(interaction.guild);
+  const hasVerifiedRole = !verifiedRole || interaction.member.roles.cache.has(verifiedRole.id);
+  const hasAcceptedRules = Boolean(findAcceptanceByDiscordUserId(interaction.user.id));
+
+  return hasVerifiedRole && hasAcceptedRules;
+}
+
+function resolveApplicationLogsChannel(guild) {
+  if (process.env.APPLICATION_LOGS_CHANNEL_ID) {
+    const configured = guild.channels.cache.get(process.env.APPLICATION_LOGS_CHANNEL_ID);
+    if (configured?.isTextBased()) {
+      return configured;
+    }
+  }
+
+  return guild.channels.cache.find(
+    (channel) => channel.isTextBased?.() && channel.name.includes("application-logs"),
+  ) || null;
+}
+
+function canReviewStaffApplications(interaction) {
+  if (interaction.user.id === process.env.OWNER_USER_ID) {
+    return true;
+  }
+
+  if (interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return true;
+  }
+
+  const managementRole = process.env.MANAGEMENT_ROLE_ID
+    ? interaction.guild?.roles.cache.get(process.env.MANAGEMENT_ROLE_ID)
+    : interaction.guild?.roles.cache.find((role) =>
+      ["➟ Management", "➟ Senior Management"].includes(role.name)
+    );
+
+  return Boolean(managementRole && interaction.member?.roles.cache.has(managementRole.id));
+}
+
+async function refreshGiveawayMessage(interaction, giveaway) {
+  const channel = giveaway.channelId
+    ? await interaction.client.channels.fetch(giveaway.channelId).catch(() => null)
+    : interaction.channel;
+
+  if (!channel?.isTextBased() || !giveaway.messageId) {
+    return;
+  }
+
+  const message = await channel.messages.fetch(giveaway.messageId).catch(() => null);
+  if (!message) {
+    return;
+  }
+
+  await message.edit(createGiveawayPanel(giveaway)).catch(() => null);
 }
 
 async function resolveInteractionGuild(interaction) {
@@ -280,6 +389,232 @@ async function runCommandWithLog({ interaction, command, reason, source, modCall
 module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
+    if (interaction.isButton() && interaction.customId === STAFF_APPLICATION_OPEN_ID) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Staff applications only work inside the server.", ephemeral: true });
+        return;
+      }
+
+      const eligibility = canApply(interaction.user.id);
+      if (!eligibility.allowed) {
+        await interaction.reply({
+          content: "You cannot submit a staff application while a blacklist is active on your case file.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const existing = findPendingApplicationByUserId(interaction.user.id);
+      if (existing) {
+        await interaction.reply({
+          content: `You already have a pending staff application (${existing.applicationId}).`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.showModal(createStaffApplicationModal());
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === STAFF_APPLICATION_MODAL_ID) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Staff applications only work inside the server.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const eligibility = canApply(interaction.user.id);
+      if (!eligibility.allowed) {
+        await interaction.editReply("You cannot submit a staff application while a blacklist is active.");
+        return;
+      }
+
+      const existing = findPendingApplicationByUserId(interaction.user.id);
+      if (existing) {
+        await interaction.editReply(`You already have a pending staff application (${existing.applicationId}).`);
+        return;
+      }
+
+      const application = createStaffApplication({
+        user: interaction.user,
+        answers: {
+          robloxUsername: interaction.fields.getTextInputValue(STAFF_APPLICATION_ROBLOX_ID),
+          availability: interaction.fields.getTextInputValue(STAFF_APPLICATION_AVAILABILITY_ID),
+          motivation: interaction.fields.getTextInputValue(STAFF_APPLICATION_MOTIVATION_ID),
+          experience: interaction.fields.getTextInputValue(STAFF_APPLICATION_EXPERIENCE_ID),
+          scenario: interaction.fields.getTextInputValue(STAFF_APPLICATION_SCENARIO_ID),
+        },
+      });
+
+      await interaction.guild.channels.fetch().catch(() => null);
+      const logsChannel = resolveApplicationLogsChannel(interaction.guild);
+      const reviewMessage = createStaffApplicationReviewMessage(application);
+
+      if (logsChannel) {
+        await logsChannel.send(reviewMessage);
+      } else if (process.env.OWNER_USER_ID) {
+        const owner = await interaction.client.users.fetch(process.env.OWNER_USER_ID).catch(() => null);
+        await owner?.send(reviewMessage).catch(() => null);
+      }
+
+      await interaction.editReply(
+        `Application ${application.applicationId} submitted. Management will review it privately.`,
+      );
+      return;
+    }
+
+    if (
+      interaction.isButton()
+      && (
+        interaction.customId.startsWith(STAFF_APPLICATION_APPROVE_PREFIX)
+        || interaction.customId.startsWith(STAFF_APPLICATION_DENY_PREFIX)
+      )
+    ) {
+      if (!interaction.inGuild() || !canReviewStaffApplications(interaction)) {
+        await interaction.reply({ content: "You do not have permission to review staff applications.", ephemeral: true });
+        return;
+      }
+
+      const approved = interaction.customId.startsWith(STAFF_APPLICATION_APPROVE_PREFIX);
+      const prefix = approved ? STAFF_APPLICATION_APPROVE_PREFIX : STAFF_APPLICATION_DENY_PREFIX;
+      const applicationId = interaction.customId.slice(prefix.length);
+      const existing = findStaffApplication(applicationId);
+
+      if (!existing) {
+        await interaction.reply({ content: "That staff application could not be found.", ephemeral: true });
+        return;
+      }
+
+      if (existing.status !== "Pending") {
+        await interaction.reply({ content: `That application is already ${existing.status.toLowerCase()}.`, ephemeral: true });
+        return;
+      }
+
+      const application = updateStaffApplication(applicationId, {
+        status: approved ? "Approved" : "Denied",
+        reviewedByUserId: interaction.user.id,
+        reviewedByTag: interaction.user.tag,
+        reviewedAt: new Date().toISOString(),
+      });
+
+      const reviewMessage = createStaffApplicationReviewMessage(application);
+      await interaction.update({
+        components: reviewMessage.components,
+        allowedMentions: reviewMessage.allowedMentions,
+      });
+
+      const applicant = await interaction.client.users.fetch(application.discordUserId).catch(() => null);
+      await applicant?.send(
+        `Your Oregon State Roleplay staff application ${application.applicationId} was ${application.status.toLowerCase()}.`,
+      ).catch(() => null);
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(GIVEAWAY_JOIN_PREFIX)) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Giveaways only work inside the server.", ephemeral: true });
+        return;
+      }
+
+      await interaction.guild.roles.fetch().catch(() => null);
+      const giveawayId = interaction.customId.slice(GIVEAWAY_JOIN_PREFIX.length);
+      const giveaway = findGiveaway(giveawayId);
+      if (!giveaway) {
+        await interaction.reply({ content: "That giveaway could not be found.", ephemeral: true });
+        return;
+      }
+
+      if (!memberMeetsGiveawayGate(interaction, giveaway)) {
+        await interaction.reply({
+          content: "You need to verify and accept the rules before entering this giveaway.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const result = enterGiveaway(giveawayId, interaction.user);
+      if (!result.ok) {
+        await interaction.reply({
+          content: result.reason === "ended" ? "That giveaway has already ended." : "That giveaway could not be found.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await refreshGiveawayMessage(interaction, result.giveaway);
+      await interaction.reply({
+        content: result.alreadyEntered ? "You are already entered." : "You are entered. Good luck.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith(SUPPORT_TICKET_PREFIX)) {
+      const typeKey = interaction.customId.slice(SUPPORT_TICKET_PREFIX.length);
+      if (!ticketTypes[typeKey]) {
+        await interaction.reply({ content: "That ticket type is not available.", ephemeral: true });
+        return;
+      }
+
+      await interaction.showModal(createSupportTicketModal(typeKey));
+      return;
+    }
+
+    if (interaction.isStringSelectMenu() && interaction.customId === SUPPORT_TICKET_SELECT_ID) {
+      const typeKey = interaction.values[0];
+      if (!ticketTypes[typeKey]) {
+        await interaction.reply({ content: "That ticket type is not available.", ephemeral: true });
+        return;
+      }
+
+      await interaction.showModal(createSupportTicketModal(typeKey));
+      return;
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId.startsWith(SUPPORT_TICKET_MODAL_PREFIX)) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({ content: "Support tickets only work inside the server.", ephemeral: true });
+        return;
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const typeKey = interaction.customId.slice(SUPPORT_TICKET_MODAL_PREFIX.length);
+      const type = ticketTypes[typeKey];
+      if (!type) {
+        await interaction.editReply({ content: "That ticket type is not available." });
+        return;
+      }
+
+      const details = {
+        type: type.title,
+        robloxUsername: interaction.fields.getTextInputValue(SUPPORT_ROBLOX_ID) || null,
+        summary: interaction.fields.getTextInputValue(SUPPORT_SUMMARY_ID),
+        details: interaction.fields.getTextInputValue(SUPPORT_DETAILS_ID),
+        proof: interaction.fields.getTextInputValue(SUPPORT_PROOF_ID) || null,
+        priority: typeKey === "report" || typeKey === "appeal" ? "Review" : "Normal",
+      };
+
+      const { channel, ticket } = await createTicketChannel(interaction, interaction.user, details);
+      await channel.send({
+        content: `<@${interaction.user.id}>`,
+        allowedMentions: { users: [interaction.user.id] },
+      });
+      await channel.send(createTicketOpenedMessage({
+        ticket,
+        opener: interaction.user,
+        targetUser: interaction.user,
+      }));
+      await channel.send(createTicketControlsMessage(interaction.user));
+
+      await interaction.editReply({
+        content: `Ticket opened: <#${channel.id}>`,
+      });
+      return;
+    }
+
     if (interaction.isButton() && interaction.customId === ERLC_COMMAND_BUTTON_ID) {
       if (!canUseErlcControls(interaction)) {
         await interaction.reply({ content: "You do not have access to ER:LC controls.", ephemeral: true });
@@ -844,6 +1179,33 @@ module.exports = {
       return;
     }
 
+    if (interaction.isButton() && interaction.customId === VERIFICATION_START_BUTTON_ID) {
+      if (!interaction.inGuild()) {
+        await interaction.reply({
+          content: "Start verification from the OSRP server.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      try {
+        await interaction.reply({
+          ...createVerificationLaunchMessage({
+            discordUserId: interaction.user.id,
+            guildId: interaction.guildId,
+          }),
+          ephemeral: true,
+        });
+      } catch (error) {
+        logger.error("Could not create verification launch link.", error);
+        await interaction.reply({
+          content: "Verification is not available right now. Staff have been notified.",
+          ephemeral: true,
+        });
+      }
+      return;
+    }
+
     if (interaction.isButton() && interaction.customId === RULES_DISCORD_BUTTON_ID) {
       await interaction.reply({
         ...createRulesDetailMessage("discord"),
@@ -880,17 +1242,33 @@ module.exports = {
 
       const existingAcceptance = findAcceptanceByDiscordUserId(interaction.user.id);
       if (existingAcceptance) {
-        await interaction.reply({
-          content: "You already accepted the rules. Full access should already be available.",
-          ephemeral: true,
-        });
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          await grantFullAccess(interaction.member);
+          await interaction.editReply(
+            "You already accepted the rules. Your server access has been checked and repaired.",
+          );
+        } catch (error) {
+          logger.error("Failed to repair roles for an existing rules acceptance.", error);
+          await interaction.editReply(
+            "Your previous acceptance was found, but the bot could not repair your access. Staff have been notified.",
+          );
+        }
         return;
       }
 
       await interaction.deferReply({ ephemeral: true });
 
       const member = interaction.member;
-      await grantFullAccess(member);
+      try {
+        await grantFullAccess(member);
+      } catch (error) {
+        logger.error("Failed to grant full access after rules acceptance.", error);
+        await interaction.editReply(
+          "Your acceptance could not be completed because the Verified role is missing or the bot cannot assign it. The error has been logged for staff.",
+        );
+        return;
+      }
 
       saveAcceptance({
         discordUserId: interaction.user.id,

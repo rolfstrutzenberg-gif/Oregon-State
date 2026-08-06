@@ -5,7 +5,8 @@ function loadCommands() {
   const commandsPath = __dirname;
   const commandFiles = fs
     .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".js") && file !== "index.js");
+    .filter((file) => file.endsWith(".js") && file !== "index.js")
+    .filter((file) => !(process.env.NODE_ENV === "production" && file === "verify-mock.js"));
 
   const commands = [];
   const commandMap = new Map();

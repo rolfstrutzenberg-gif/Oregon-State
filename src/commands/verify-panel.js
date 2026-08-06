@@ -29,9 +29,9 @@ module.exports = {
     });
 
     await interaction.reply({
-      content: panel.readiness.hasPortalUrl
+      content: panel.readiness.isReady
         ? `Verification panel posted in <#${targetChannel.id}>.`
-        : `Verification panel posted in <#${targetChannel.id}>. The Roblox verification portal still needs to be configured.`,
+        : `Verification panel posted in <#${targetChannel.id}>. The Roblox portal or callback secret still needs to be configured.`,
       ephemeral: true,
     });
   },

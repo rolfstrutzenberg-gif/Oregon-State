@@ -1,71 +1,52 @@
-# Verification Plan
+# OSRP Roblox Verification
 
-## Goal
+## Flow
 
-Build a Roblox-backed verification flow that links:
+1. A member clicks **Start Verification** in Discord.
+2. The bot replies ephemerally with a signed link bound to that Discord user and guild. The link expires after ten minutes.
+3. Vercel validates the signature and starts Roblox OAuth.
+4. Roblox returns the member to `/api/roblox/callback`.
+5. Vercel sends the Discord identity and Roblox profile to the bot's public `/verification/callback` endpoint.
+6. The bot rejects duplicate links, stores the verification, moves the member to **Pending Rules**, logs the result, and DMs the Rules button.
+7. Accepting the rules grants **Verified Community Member** and removes onboarding roles.
 
-- Discord user ID
-- Roblox user ID
-- Roblox username
-- Roblox display name
-- verification timestamp
-
-This gives us a clean identity record now so ERLC integration can cross-reference the same Roblox account later.
-
-## Current Foundation
-
-The bot now supports:
-
-- a verification panel deployment command
-- a verification status lookup command
-- persistent verification storage in `data/verifications.json`
-- environment placeholders for Roblox OAuth and panel URLs
-
-## What Is Still Needed
-
-To finish live Roblox verification, we still need:
-
-- Roblox OAuth app client ID
-- Roblox OAuth app client secret
-- Roblox OAuth redirect URI
-- a public verification portal URL that Roblox can redirect back to
-- a signed Discord handoff so the portal knows which Discord user is verifying
-
-## Recommended Flow
-
-1. User clicks the verification button in Discord.
-2. User is sent to the verification portal.
-3. Portal starts Roblox OAuth 2.0 / OIDC.
-4. Portal receives Roblox user info.
-5. Portal writes the verified Roblox identity back to the bot datastore.
-6. Bot grants verified roles and logs the verification event.
-
-## Portal Scaffold
-
-The repo now includes a Vercel-ready portal in `verification-portal/`.
-
-- `/` starts Roblox OAuth.
-- `/api/roblox/start` starts Roblox OAuth.
-- `/api/roblox/callback` receives the Roblox callback.
-- `/api/health` checks that the portal is online.
-
-Use a Vercel deployment URL like this as the Roblox OAuth redirect URI:
+## Bot Environment
 
 ```text
-https://oregon-state-verification.vercel.app/api/roblox/callback
+DISCORD_TOKEN=
+CLIENT_ID=
+GUILD_ID=
+VERIFY_CHANNEL_ID=
+VERIFY_LOG_CHANNEL_ID=
+UNVERIFIED_ROLE_ID=
+VERIFIED_ROLE_ID=
+PENDING_RULES_ROLE_ID=
+RULES_CHANNEL_ID=
+VERIFY_PORTAL_URL=https://oregon-state-verification.vercel.app/api/roblox/start
+BOT_VERIFICATION_CALLBACK_SECRET=
+VERIFICATION_CALLBACK_PORT=3001
 ```
 
-## Roblox Data To Store
+## Vercel Environment
 
-- `discordUserId`
-- `discordTag`
-- `robloxUserId`
-- `robloxUsername`
-- `robloxDisplayName`
-- `verifiedAt`
-- `provider`
-- `notes`
+```text
+ROBLOX_OAUTH_CLIENT_ID=
+ROBLOX_OAUTH_CLIENT_SECRET=
+ROBLOX_OAUTH_REDIRECT_URI=https://oregon-state-verification.vercel.app/api/roblox/callback
+ROBLOX_OAUTH_SCOPES=openid profile
+BOT_VERIFICATION_CALLBACK_URL=https://YOUR-PUBLIC-BOT-HOST/verification/callback
+BOT_VERIFICATION_CALLBACK_SECRET=
+SUCCESS_REDIRECT_URL=
+```
 
-## Why OAuth 2.0
+`BOT_VERIFICATION_CALLBACK_SECRET` must be the same long random value in the bot and Vercel environments. Never commit it.
 
-Roblox's official Open Cloud authentication uses OAuth 2.0 with OpenID Connect. The official docs say the `openid` scope is required for identity and `profile` gives access to public profile details such as user IDs and usernames.
+## External Setup
+
+- Add the exact redirect URI to the Roblox OAuth application.
+- Expose port `3001` through the bot's HTTPS host or tunnel.
+- Give the Discord bot permission to manage the three onboarding roles.
+- Keep the bot's highest role above those roles.
+- Enable the Server Members Intent in the Discord Developer Portal.
+- Redeploy Vercel after changing its environment variables.
+- Redeploy Discord commands after replacing the bot token.

@@ -151,7 +151,11 @@ async function grantFullAccess(member) {
 
   const { verifiedRole, unverifiedRole, pendingRulesRole } = resolveOnboardingRoles(member.guild);
 
-  if (verifiedRole && !member.roles.cache.has(verifiedRole.id)) {
+  if (!verifiedRole) {
+    throw new Error("The Verified Community Member role is missing.");
+  }
+
+  if (!member.roles.cache.has(verifiedRole.id)) {
     await member.roles.add(verifiedRole, "Rules accepted, full access granted");
   }
 

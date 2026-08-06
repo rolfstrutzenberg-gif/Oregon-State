@@ -14,8 +14,8 @@ function loadPortalConfig() {
     redirectUri: requiredEnv("ROBLOX_OAUTH_REDIRECT_URI"),
     scopes: process.env.ROBLOX_OAUTH_SCOPES || "openid profile",
     successRedirectUrl: process.env.SUCCESS_REDIRECT_URL || null,
-    botCallbackUrl: process.env.BOT_VERIFICATION_CALLBACK_URL || null,
-    botCallbackSecret: process.env.BOT_VERIFICATION_CALLBACK_SECRET || null,
+    botCallbackUrl: requiredEnv("BOT_VERIFICATION_CALLBACK_URL"),
+    botCallbackSecret: requiredEnv("BOT_VERIFICATION_CALLBACK_SECRET"),
   };
 }
 

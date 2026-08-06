@@ -2,7 +2,15 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/api/roblox/start"
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/site.css",
+      "dest": "/public/site.css"
+    },
+    {
+      "src": "/site.js",
+      "dest": "/public/site.js"
     }
   ]
 }
