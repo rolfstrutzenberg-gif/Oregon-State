@@ -77,8 +77,8 @@ async function notifyBot(config, profile, context) {
     }),
   });
 
+  const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
     const error = new Error(body?.error || "The Discord verification service did not accept the account.");
     error.code = response.status === 409
       ? "ACCOUNT_CONFLICT"
@@ -87,6 +87,45 @@ async function notifyBot(config, profile, context) {
         : "CALLBACK_FAILED";
     throw error;
   }
+
+  if (response.status !== 202 || !body?.eventId) {
+    return;
+  }
+
+  const statusUrl = new URL(
+    `/verification/events/${body.eventId}`,
+    config.botCallbackUrl,
+  );
+  const deadline = Date.now() + 9_000;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const statusResponse = await fetch(statusUrl, {
+      headers: {
+        "x-osrp-verification-secret": config.botCallbackSecret,
+      },
+    });
+    const statusBody = await statusResponse.json().catch(() => null);
+    if (!statusResponse.ok) {
+      continue;
+    }
+
+    if (statusBody?.event?.status === "completed") {
+      return;
+    }
+    if (statusBody?.event?.status === "failed") {
+      const error = new Error(statusBody.event.error || "The Discord verification service did not accept the account.");
+      error.code = statusBody.event.statusCode === 409
+        ? "ACCOUNT_CONFLICT"
+        : statusBody.event.statusCode === 404
+          ? "MEMBER_NOT_FOUND"
+          : "CALLBACK_FAILED";
+      throw error;
+    }
+  }
+
+  const error = new Error("Discord verification processing timed out.");
+  error.code = "CALLBACK_FAILED";
+  throw error;
 
 }
 

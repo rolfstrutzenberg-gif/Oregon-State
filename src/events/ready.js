@@ -3,6 +3,7 @@ const { priorities } = require("../constants/branding");
 const { startErlcModCallPolling } = require("../services/erlc-modcall-poller");
 const { startSessionApiPolling } = require("../services/session-api-poller");
 const { startVerificationCallbackServer } = require("../services/verification-callback-server");
+const { startVerificationRelayPolling } = require("../services/verification-relay-poller");
 const { createLogger } = require("../utils/logger");
 
 const logger = createLogger("ready");
@@ -15,6 +16,9 @@ module.exports = {
     logger.info(`Project priorities: ${priorities.join(" | ")}`);
     client.sessionApiPoller = startSessionApiPolling();
     client.erlcModCallPoller = startErlcModCallPolling(client);
-    client.verificationCallbackServer = startVerificationCallbackServer(client);
+    client.verificationRelayPoller = startVerificationRelayPolling(client);
+    if (!client.verificationRelayPoller) {
+      client.verificationCallbackServer = startVerificationCallbackServer(client);
+    }
   },
 };

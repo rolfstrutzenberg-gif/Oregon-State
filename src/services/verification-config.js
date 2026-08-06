@@ -16,6 +16,11 @@ function loadVerificationConfig() {
     verifyPortalUrl: process.env.VERIFY_PORTAL_URL || null,
     callbackSecret: process.env.BOT_VERIFICATION_CALLBACK_SECRET || null,
     callbackPort: Number(process.env.VERIFICATION_CALLBACK_PORT || 3001),
+    relayUrl: process.env.VERIFICATION_RELAY_URL || null,
+    relayPollIntervalMs: Math.max(
+      500,
+      Number(process.env.VERIFICATION_RELAY_POLL_INTERVAL_MS || 1000),
+    ),
     robloxClientId: process.env.ROBLOX_OAUTH_CLIENT_ID || null,
     robloxRedirectUri: process.env.ROBLOX_OAUTH_REDIRECT_URI || null,
     robloxScopes: (process.env.ROBLOX_OAUTH_SCOPES || "openid profile")
@@ -33,6 +38,7 @@ function verificationReadiness(config = loadVerificationConfig()) {
     hasVerifiedRoleId: Boolean(config.verifiedRoleId),
     hasUnverifiedRoleId: Boolean(config.unverifiedRoleId),
     hasVerifyLogChannelId: Boolean(config.verifyLogChannelId),
+    hasRelayUrl: Boolean(config.relayUrl),
   };
 }
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "osrp-verification-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-06",
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": ["17 4 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "osrp-verification-relay",
+      "database_id": "ac6f33ec-152e-49fe-ae20-281b286f1803"
+    }
+  ]
+}
