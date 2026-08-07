@@ -45,6 +45,10 @@ function page(title, body, options = {}) {
     </main>
     <footer class="site-footer shell">
       <span>Oregon State Roleplay</span>
+      <nav class="footer-links" aria-label="Legal">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
       <span>EST 2026</span>
     </footer>
   </body>

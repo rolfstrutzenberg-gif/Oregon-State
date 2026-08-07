@@ -11,6 +11,14 @@
     {
       "src": "/site.js",
       "dest": "/public/site.js"
+    },
+    {
+      "src": "/privacy/?",
+      "dest": "/public/privacy.html"
+    },
+    {
+      "src": "/terms/?",
+      "dest": "/public/terms.html"
     }
   ]
 }

@@ -47,6 +47,12 @@ SUCCESS_REDIRECT_URL=
 ## External Setup
 
 - Add the exact redirect URI to the Roblox OAuth application.
+- Roblox OAuth application values:
+  - Entry link: `https://oregon-state-verification.vercel.app/`
+  - Privacy policy: `https://oregon-state-verification.vercel.app/privacy`
+  - Terms of service: `https://oregon-state-verification.vercel.app/terms`
+  - Redirect URL: `https://oregon-state-verification.vercel.app/api/roblox/callback`
+  - Scopes: `openid` and `profile` only.
 - Deploy `cloudflare/verification-relay` and apply its D1 migration.
 - Set the Worker secret `VERIFICATION_RELAY_SECRET` to the same value as `BOT_VERIFICATION_CALLBACK_SECRET`.
 - Give the Discord bot permission to manage the three onboarding roles.
