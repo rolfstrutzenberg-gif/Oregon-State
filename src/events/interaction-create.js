@@ -1,4 +1,4 @@
-const { Events, PermissionFlagsBits } = require("discord.js");
+const { Events, MessageFlags, PermissionFlagsBits } = require("discord.js");
 const { findAcceptanceByDiscordUserId, saveAcceptance } = require("../services/rules-acceptance-store");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
 const {
@@ -1183,24 +1183,32 @@ module.exports = {
       if (!interaction.inGuild()) {
         await interaction.reply({
           content: "Start verification from the OSRP server.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
 
       try {
-        await interaction.reply({
-          ...createVerificationLaunchMessage({
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      } catch (error) {
+        logger.error("Could not acknowledge verification interaction.", error);
+        return;
+      }
+
+      try {
+        await interaction.editReply(
+          createVerificationLaunchMessage({
             discordUserId: interaction.user.id,
             guildId: interaction.guildId,
           }),
-          ephemeral: true,
-        });
+        );
       } catch (error) {
         logger.error("Could not create verification launch link.", error);
-        await interaction.reply({
+        await interaction.editReply({
           content: "Verification is not available right now. Staff have been notified.",
-          ephemeral: true,
+          components: [],
+        }).catch((replyError) => {
+          logger.error("Could not send verification failure response.", replyError);
         });
       }
       return;
