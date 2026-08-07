@@ -13,11 +13,11 @@
       "dest": "/public/site.js"
     },
     {
-      "src": "/privacy/?",
+      "src": "/privacy",
       "dest": "/public/privacy.html"
     },
     {
-      "src": "/terms/?",
+      "src": "/terms",
       "dest": "/public/terms.html"
     }
   ]
