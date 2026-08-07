@@ -4,7 +4,6 @@ const {
   ButtonStyle,
   ContainerBuilder,
   MessageFlags,
-  SectionBuilder,
   TextDisplayBuilder,
 } = require("discord.js");
 const { loadVerificationConfig, verificationReadiness } = require("../services/verification-config");
@@ -32,27 +31,19 @@ function createVerificationPanelMessage({ guildId = process.env.GUILD_ID } = {})
     fileName: "osrp-verification-banner-v2.png",
   });
   const isReady = Boolean(config.verifyPortalUrl && config.callbackSecret);
-  const button = isReady
+  const verificationButton = isReady
     ? new ButtonBuilder()
-      .setLabel(`${config.verifyPanelButtonText} →`)
-      .setStyle(ButtonStyle.Primary)
+      .setLabel("Start Verification")
+      .setStyle(ButtonStyle.Secondary)
       .setCustomId(VERIFICATION_START_BUTTON_ID)
     : new ButtonBuilder()
       .setCustomId("verification:setup-pending")
       .setLabel("Verification Setup Pending")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(true);
-  const links = [];
-  if (config.verifySiteUrl) {
-    links.push(
-      new ButtonBuilder()
-        .setLabel("Verification Page")
-        .setStyle(ButtonStyle.Link)
-        .setURL(config.verifySiteUrl),
-    );
-  }
+  const controls = [verificationButton];
   if (guildId && config.supportChannelId) {
-    links.push(
+    controls.push(
       new ButtonBuilder()
         .setLabel("Get Support")
         .setStyle(ButtonStyle.Link)
@@ -72,27 +63,11 @@ function createVerificationPanelMessage({ guildId = process.env.GUILD_ID } = {})
     )
     .addSeparatorComponents(
       panelDivider(),
-    )
-    .addSectionComponents(
-      new SectionBuilder()
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(
-            isReady ? "## Verify Your Account" : "## Verification Unavailable",
-          ),
-          new TextDisplayBuilder().setContent(
-            isReady
-              ? "Press the button to continue through Roblox. Once complete, return to Discord and accept the rules."
-              : "The Roblox connection is temporarily unavailable. Please try again shortly.",
-          ),
-        )
-        .setButtonAccessory(button),
     );
 
-  if (links.length > 0) {
-    body.addActionRowComponents(
-      new ActionRowBuilder().addComponents(links),
-    );
-  }
+  body.addActionRowComponents(
+    new ActionRowBuilder().addComponents(controls),
+  );
 
   body
     .addSeparatorComponents(
