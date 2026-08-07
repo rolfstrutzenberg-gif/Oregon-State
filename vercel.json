@@ -1,24 +1,13 @@
 {
-  "routes": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/public/index.html"
+      "source": "/privacy",
+      "destination": "/privacy.html"
     },
     {
-      "src": "/site.css",
-      "dest": "/public/site.css"
-    },
-    {
-      "src": "/site.js",
-      "dest": "/public/site.js"
-    },
-    {
-      "src": "/privacy",
-      "dest": "/public/privacy.html"
-    },
-    {
-      "src": "/terms",
-      "dest": "/public/terms.html"
+      "source": "/terms",
+      "destination": "/terms.html"
     }
   ]
 }
