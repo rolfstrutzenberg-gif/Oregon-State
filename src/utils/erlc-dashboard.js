@@ -1,5 +1,4 @@
 const fs = require("node:fs");
-const path = require("node:path");
 const {
   ActionRowBuilder,
   AttachmentBuilder,
@@ -26,14 +25,14 @@ const ERLC_COMMAND_MODAL_ID = "erlc:command-modal";
 const ERLC_COMMAND_INPUT_ID = "erlc:command-input";
 const ERLC_COMMAND_REASON_ID = "erlc:command-reason";
 const ERLC_MODCALL_RESPOND_PREFIX = "erlc:modcall:respond:";
-const GAME_DASHBOARD_BANNER_PATH = path.join(process.cwd(), "assets", "banners", "game-dashboard.png");
+const GAME_DASHBOARD_BANNER_PATH = process.env.GAME_DASHBOARD_BANNER_PATH || null;
 
 function footer() {
   return "-# Oregon State Roleplay • EST 2026";
 }
 
 function createErlcDashboardMessage() {
-  const hasBanner = fs.existsSync(GAME_DASHBOARD_BANNER_PATH);
+  const hasBanner = Boolean(GAME_DASHBOARD_BANNER_PATH && fs.existsSync(GAME_DASHBOARD_BANNER_PATH));
   const files = hasBanner
     ? [new AttachmentBuilder(GAME_DASHBOARD_BANNER_PATH, { name: "game-dashboard-banner.png" })]
     : [];

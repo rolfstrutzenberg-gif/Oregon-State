@@ -3,6 +3,7 @@ require("dotenv").config();
 const { Client, Events, GatewayIntentBits } = require("discord.js");
 const { panelBanner } = require("../src/constants/panel-banners");
 const { createBrandedPanelMessage } = require("../src/utils/branded-panels");
+const { createErlcDashboardMessage } = require("../src/utils/erlc-dashboard");
 const { createRulesPanelMessage } = require("../src/utils/rules-panel");
 const { createSelfRolesPanelMessage } = require("../src/utils/self-roles-panel");
 const { createMockSessionsPanelMessage } = require("../src/utils/sessions-panel");
@@ -53,7 +54,7 @@ async function replacePanel(client, guild, definition) {
 
   const built = definition.build(guild);
   const { readiness, ...payload } = built;
-  if (!payload.files?.length) {
+  if (definition.requireBanner !== false && !payload.files?.length) {
     throw new Error(`${definition.label} did not resolve a local banner attachment.`);
   }
   const posted = await channel.send(payload);
@@ -166,11 +167,26 @@ const panelDefinitions = [
     build: () => createCaseFilesDashboardMessage(),
   },
   {
+    key: "staff_dashboard",
+    label: "Staff Dashboard",
+    resolveChannel: (guild) => configuredChannel(guild, "STAFF_INFORMATION_CHANNEL_ID", ["📌｜staff-information"]),
+    matches: (text) => text.includes("### OSRP | Staff Dashboard") || text.includes("staff-dashboard-banner.png"),
+    build: (guild) => createBrandedPanelMessage("staff_dashboard", guild),
+  },
+  {
     key: "sessions",
     label: "Sessions",
     resolveChannel: (guild) => configuredChannel(guild, "SESSIONS_CHANNEL_ID", ["🛰️｜sessions"]),
     matches: (text) => text.includes("SES-MOCK") || text.includes("session-banner.png"),
     build: (guild) => createMockSessionsPanelMessage(guild),
+  },
+  {
+    key: "game_dashboard",
+    label: "Game Dashboard",
+    requireBanner: false,
+    resolveChannel: (guild) => configuredChannel(guild, "GAME_LOGS_CHANNEL_ID", ["🎮｜game-logs"]),
+    matches: (text) => text.includes("erlc:command") || text.includes("game-dashboard-banner.png"),
+    build: () => createErlcDashboardMessage(),
   },
 ];
 
