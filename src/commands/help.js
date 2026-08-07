@@ -1,35 +1,27 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { createBaseEmbed } = require("../utils/embed-factory");
+const { replyPanel } = require("../utils/command-response");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("help")
-    .setDescription("View the current command set and project focus."),
+    .setDescription("View Oregon State Systems commands."),
   async execute(interaction) {
-    const embed = createBaseEmbed({
-      title: "Command Center",
-      description: "This build is focused on a strong foundation first, then premium self-role and panel UX.",
-    }).addFields(
-      { name: "/ping", value: "Check bot health and latency." },
-      { name: "/help", value: "View current commands and project direction." },
-      { name: "/about", value: "Show framework and architecture status." },
-      { name: "/panel", value: "Post branded OSRP information, support, announcement, giveaway, and staff panels." },
-      { name: "/welcome", value: "Post the welcome join embed." },
-      { name: "/verification", value: "Post the verification panel." },
-      { name: "/rules", value: "Post the rules panel." },
-      { name: "/selfroles", value: "Post the self-role panel." },
-      { name: "/session", value: "Open, close, vote, and check session status." },
-      { name: "/sessions", value: "Post the mock session panel." },
-      { name: "/giveaway", value: "Create, end, reroll, and check giveaway status." },
-      { name: "/erlc-dashboard", value: "Post the ER:LC command and mod call dashboard." },
-      { name: "/ticket", value: "Create a basic staff ticket." },
-      { name: "/case-dashboard", value: "Post the case files dashboard." },
-      { name: "/case-backfill", value: "Backfill case files for current members." },
-    );
-
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
+    await replyPanel(interaction, {
+      title: "Oregon State Systems",
+      description: "Commands are grouped below so you can find what you need quickly.",
+      lines: [
+        "### Moderation",
+        "`/kick` `/ban` `/unban` `/softban` `/mute` `/unmute` `/strike`",
+        "`/blacklist` `/unblacklist` `/purge` `/slowmode` `/lock` `/unlock` `/nickname` `/role`",
+        "### Information",
+        "`/whois` `/avatar` `/serverinfo` `/roleinfo` `/channelinfo` `/verify-status`",
+        "`/roblox` `/membercount` `/staff` `/status`",
+        "### Community",
+        "`/poll` `/remindme` `/8ball` `/coinflip` `/dice` `/choose` `/randomnumber` `/rps` `/slots`",
+        "### Staff Systems",
+        "`/announce` `/panel` `/session` `/giveaway` `/ticket` `/case-dashboard` `/erlc-dashboard`",
+      ],
+      footer: "Use / and select a command to view its options",
     });
   },
 };

@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { createBaseEmbed } = require("../utils/embed-factory");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
 const { verificationReadiness } = require("../services/verification-config");
+const { replyPanel } = require("../utils/command-response");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,36 +19,26 @@ module.exports = {
     const readiness = verificationReadiness();
 
     if (!record) {
-      const embed = createBaseEmbed({
-        title: "Verification Status",
-        description: `No stored Roblox verification record was found for ${user.tag}.`,
-      }).addFields({
-        name: "Portal Status",
-        value: readiness.hasPortalUrl ? "Configured" : "Not configured yet",
-      });
-
-      await interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
+      await replyPanel(interaction, {
+        title: "Verification • Not Linked",
+        description: `No stored Roblox verification was found for ${user}.`,
+        lines: [`> Verification portal: **${readiness.hasPortalUrl ? "Online" : "Not configured"}**`],
+        tone: "warning",
       });
       return;
     }
 
-    const embed = createBaseEmbed({
-      title: "Verification Status",
-      description: `Stored Roblox verification record found for ${user.tag}.`,
-    }).addFields(
-      { name: "Roblox Username", value: record.robloxUsername || "Unknown", inline: true },
-      { name: "Roblox Display Name", value: record.robloxDisplayName || "Unknown", inline: true },
-      { name: "Roblox User ID", value: String(record.robloxUserId || "Unknown"), inline: true },
-      { name: "Verified At", value: record.verifiedAt || "Unknown" },
-      { name: "Provider", value: record.provider || "Unknown", inline: true },
-      { name: "Discord User ID", value: record.discordUserId, inline: true },
-    );
-
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
+    await replyPanel(interaction, {
+      title: "Verification • Linked",
+      description: `${user} is verified with Roblox.`,
+      lines: [
+        `> Username: **${record.robloxUsername || "Unknown"}**`,
+        `> Display name: **${record.robloxDisplayName || "Unknown"}**`,
+        `> Roblox ID: \`${record.robloxUserId || "Unknown"}\``,
+        `> Discord ID: \`${record.discordUserId}\``,
+        `> Verified: **${record.verifiedAt ? new Date(record.verifiedAt).toLocaleString() : "Unknown"}**`,
+      ],
+      tone: "success",
     });
   },
 };

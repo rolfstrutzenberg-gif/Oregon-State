@@ -12,9 +12,12 @@ function loadCommands() {
   const commandMap = new Map();
 
   for (const file of commandFiles) {
-    const command = require(path.join(commandsPath, file));
-    commands.push(command);
-    commandMap.set(command.data.name, command);
+    const loaded = require(path.join(commandsPath, file));
+    const fileCommands = Array.isArray(loaded) ? loaded : [loaded];
+    for (const command of fileCommands) {
+      commands.push(command);
+      commandMap.set(command.data.name, command);
+    }
   }
 
   return {
