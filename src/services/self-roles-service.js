@@ -47,6 +47,23 @@ async function syncMemberSelfRoles(member, selectedValues) {
   };
 }
 
+function selfRolesReadiness(guild) {
+  const optionMap = getSelfRoleOptionsMap();
+  const missingRoleNames = [];
+
+  for (const option of optionMap.values()) {
+    if (!findGuildRoleByName(guild, option.roleName)) {
+      missingRoleNames.push(option.roleName);
+    }
+  }
+
+  return {
+    configuredOptions: optionMap.size,
+    missingRoleNames,
+  };
+}
+
 module.exports = {
+  selfRolesReadiness,
   syncMemberSelfRoles,
 };

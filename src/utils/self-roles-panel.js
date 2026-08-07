@@ -1,33 +1,24 @@
-const fs = require("node:fs");
 const {
   ActionRowBuilder,
-  AttachmentBuilder,
   ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
   MessageFlags,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
 } = require("discord.js");
 const { accentColor } = require("../constants/branding");
 const { loadSelfRolesConfig } = require("../services/self-roles-config");
+const {
+  appendFooterBanner,
+  createMediaAsset,
+  footerText,
+  panelDescription,
+  panelDivider,
+  panelHeading,
+  prependBanner,
+} = require("./panel-style");
 
 const SELF_ROLES_SELECT_ID = "self_roles_select:main";
-
-function buildBannerFiles(config) {
-  if (!config.bannerPath || !fs.existsSync(config.bannerPath)) {
-    return { files: [], bannerUrl: config.bannerUrl || null };
-  }
-
-  const fileName = "self-roles-banner.png";
-  return {
-    files: [new AttachmentBuilder(config.bannerPath, { name: fileName })],
-    bannerUrl: `attachment://${fileName}`,
-  };
-}
 
 function buildSelfRolesOptions(config) {
   return config.options.slice(0, 25).map((option) =>
@@ -40,17 +31,12 @@ function buildSelfRolesOptions(config) {
 
 function createSelfRolesPanelMessage() {
   const config = loadSelfRolesConfig();
-  const { files, bannerUrl } = buildBannerFiles(config);
-
-  const components = [];
-
-  if (bannerUrl) {
-    components.push(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(bannerUrl),
-      ),
-    );
-  }
+  const banner = createMediaAsset({
+    localPath: config.bannerPath,
+    remoteUrl: config.bannerUrl,
+    fileName: "self-roles-banner.png",
+  });
+  const files = [...banner.files];
 
   const selectOptions = buildSelfRolesOptions(config);
   const menu = new StringSelectMenuBuilder()
@@ -70,31 +56,30 @@ function createSelfRolesPanelMessage() {
           ],
     );
 
-  const body = new ContainerBuilder()
-    .setAccentColor(accentColor)
+  const body = new ContainerBuilder().setAccentColor(accentColor);
+  prependBanner(body, banner.url);
+
+  body
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${config.brandText} | ${config.title}`),
-      new TextDisplayBuilder().setContent(config.description),
+      new TextDisplayBuilder().setContent(panelHeading(config.title, config.brandText)),
+      new TextDisplayBuilder().setContent(panelDescription(config.description)),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setDivider(true)
-        .setSpacing(SeparatorSpacingSize.Small),
+      panelDivider(),
     )
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(menu),
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent("-# Tap Done after choosing your roles."),
-      new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
+      footerText("Changes save when you close the menu"),
     );
 
-  components.push(body);
+  appendFooterBanner(body, files);
 
   return {
     files,
     flags: MessageFlags.IsComponentsV2,
-    components,
+    components: [body],
   };
 }
 

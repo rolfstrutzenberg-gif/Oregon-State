@@ -19,7 +19,7 @@ const { accentColor } = require("../constants/branding");
 const SESSION_VOTE_INTERESTED_PREFIX = "session:vote:interested:";
 const SESSION_VOTE_REMOVE_PREFIX = "session:vote:remove:";
 const SESSION_INFO_PREFIX = "session:info:";
-const DEFAULT_SESSION_BANNER_PATH = path.join(process.cwd(), "assets", "sessions", "session-open.png");
+const DEFAULT_SESSION_BANNER_PATH = path.join(process.cwd(), "assets", "banners", "session-open.png");
 
 function buildChannelUrl(guildId, channel) {
   return `https://discord.com/channels/${guildId}/${channel.id}`;

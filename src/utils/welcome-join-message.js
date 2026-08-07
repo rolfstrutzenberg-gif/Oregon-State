@@ -1,34 +1,22 @@
-const fs = require("node:fs");
 const {
   ActionRowBuilder,
-  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
   MessageFlags,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
   TextDisplayBuilder,
 } = require("discord.js");
 const { accentColor } = require("../constants/branding");
 const { defaultChannelNames, loadWelcomeConfig } = require("../services/welcome-config");
-
-function buildBanner(config) {
-  if (!config.bannerPath || !fs.existsSync(config.bannerPath)) {
-    return {
-      files: [],
-      imageUrl: config.bannerUrl || null,
-    };
-  }
-
-  const fileName = "welcome-banner.png";
-  return {
-    files: [new AttachmentBuilder(config.bannerPath, { name: fileName })],
-    imageUrl: `attachment://${fileName}`,
-  };
-}
+const {
+  appendFooterBanner,
+  createMediaAsset,
+  footerText,
+  panelDescription,
+  panelDivider,
+  panelHeading,
+  prependBanner,
+} = require("./panel-style");
 
 function resolveTargetChannel(guild, explicitId, fallbackName) {
   if (explicitId) {
@@ -44,20 +32,15 @@ function buildChannelUrl(guildId, channel) {
 
 function buildWelcomeJoinMessage(member) {
   const config = loadWelcomeConfig();
-  const { files, imageUrl } = buildBanner(config);
+  const banner = createMediaAsset({
+    localPath: config.bannerPath,
+    remoteUrl: config.bannerUrl,
+    fileName: "welcome-banner.png",
+  });
+  const files = [...banner.files];
   const welcomeChannel = resolveTargetChannel(member.guild, config.channelId, defaultChannelNames.welcome);
   const verifyChannel = resolveTargetChannel(member.guild, config.verifyChannelId, defaultChannelNames.verify);
   const rulesChannel = resolveTargetChannel(member.guild, config.rulesChannelId, defaultChannelNames.rules);
-
-  const components = [];
-
-  if (imageUrl) {
-    components.push(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(imageUrl),
-      ),
-    );
-  }
 
   const buttonRow = new ActionRowBuilder();
 
@@ -79,19 +62,18 @@ function buildWelcomeJoinMessage(member) {
     );
   }
 
-  const body = new ContainerBuilder()
-    .setAccentColor(accentColor)
+  const body = new ContainerBuilder().setAccentColor(accentColor);
+  prependBanner(body, banner.url);
+
+  body
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(`### ${config.brandText}`),
-      new TextDisplayBuilder().setContent(`## ${config.title}`),
+      new TextDisplayBuilder().setContent(panelHeading(config.title, config.brandText)),
       new TextDisplayBuilder().setContent(
-        `> Welcome to Oregon State Roleplay, <@${member.id}>.\n> Use the buttons below to get verified and read the rules before continuing.`,
+        panelDescription(`<@${member.id}>, welcome to Oregon State Roleplay. Verify first, then read and accept the rules.`),
       ),
     )
     .addSeparatorComponents(
-      new SeparatorBuilder()
-        .setDivider(true)
-        .setSpacing(SeparatorSpacingSize.Small),
+      panelDivider(),
     );
 
   if (buttonRow.components.length > 0) {
@@ -99,21 +81,19 @@ function buildWelcomeJoinMessage(member) {
   }
 
   body.addSeparatorComponents(
-    new SeparatorBuilder()
-      .setDivider(false)
-      .setSpacing(SeparatorSpacingSize.Small),
+    panelDivider({ visible: false }),
   );
 
   body.addTextDisplayComponents(
-    new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
+    footerText("Complete both steps to unlock the server"),
   );
 
-  components.push(body);
+  appendFooterBanner(body, files);
 
   return {
     files,
     flags: MessageFlags.IsComponentsV2,
-    components,
+    components: [body],
     allowedMentions: { users: [member.id] },
     targetChannel: welcomeChannel,
   };

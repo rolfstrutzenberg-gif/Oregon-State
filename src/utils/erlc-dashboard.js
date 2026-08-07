@@ -1,8 +1,13 @@
+const fs = require("node:fs");
+const path = require("node:path");
 const {
   ActionRowBuilder,
+  AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder,
   MessageFlags,
   ModalBuilder,
   SeparatorBuilder,
@@ -21,60 +26,78 @@ const ERLC_COMMAND_MODAL_ID = "erlc:command-modal";
 const ERLC_COMMAND_INPUT_ID = "erlc:command-input";
 const ERLC_COMMAND_REASON_ID = "erlc:command-reason";
 const ERLC_MODCALL_RESPOND_PREFIX = "erlc:modcall:respond:";
+const GAME_DASHBOARD_BANNER_PATH = path.join(process.cwd(), "assets", "banners", "game-dashboard.png");
 
 function footer() {
   return "-# Oregon State Roleplay • EST 2026";
 }
 
 function createErlcDashboardMessage() {
-  return {
-    flags: MessageFlags.IsComponentsV2,
-    components: [
-      new ContainerBuilder()
-        .setAccentColor(accentColor)
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("### OSRP"),
-          new TextDisplayBuilder().setContent("## ER:LC Control"),
-          new TextDisplayBuilder().setContent("Run server commands, review mod calls, and keep every action logged."),
-        )
-        .addSeparatorComponents(
-          new SeparatorBuilder()
-            .setDivider(true)
-            .setSpacing(SeparatorSpacingSize.Small),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(ERLC_COMMAND_BUTTON_ID)
-              .setLabel("Run Command")
-              .setStyle(ButtonStyle.Primary),
-            new ButtonBuilder()
-              .setCustomId(ERLC_REFRESH_MODCALLS_ID)
-              .setLabel("Refresh Mod Calls")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(ERLC_PENDING_MODCALLS_ID)
-              .setLabel("Pending Calls")
-              .setStyle(ButtonStyle.Secondary),
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(ERLC_RECENT_COMMANDS_ID)
-              .setLabel("Recent Commands")
-              .setStyle(ButtonStyle.Secondary),
-          ),
-        )
-        .addSeparatorComponents(
-          new SeparatorBuilder()
-            .setDivider(false)
-            .setSpacing(SeparatorSpacingSize.Small),
-        )
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(footer()),
+  const hasBanner = fs.existsSync(GAME_DASHBOARD_BANNER_PATH);
+  const files = hasBanner
+    ? [new AttachmentBuilder(GAME_DASHBOARD_BANNER_PATH, { name: "game-dashboard-banner.png" })]
+    : [];
+  const components = [];
+
+  if (hasBanner) {
+    components.push(
+      new MediaGalleryBuilder().addItems(
+        new MediaGalleryItemBuilder().setURL("attachment://game-dashboard-banner.png"),
+      ),
+    );
+  }
+
+  components.push(
+    new ContainerBuilder()
+      .setAccentColor(accentColor)
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent("### OSRP"),
+        new TextDisplayBuilder().setContent("## Game Dashboard"),
+        new TextDisplayBuilder().setContent("Run server commands, review mod calls, and keep every action logged."),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(true)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(ERLC_COMMAND_BUTTON_ID)
+            .setLabel("Run Command")
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId(ERLC_REFRESH_MODCALLS_ID)
+            .setLabel("Refresh Mod Calls")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId(ERLC_PENDING_MODCALLS_ID)
+            .setLabel("Pending Calls")
+            .setStyle(ButtonStyle.Secondary),
         ),
-    ],
+      )
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(ERLC_RECENT_COMMANDS_ID)
+            .setLabel("Recent Commands")
+            .setStyle(ButtonStyle.Secondary),
+        ),
+      )
+      .addSeparatorComponents(
+        new SeparatorBuilder()
+          .setDivider(false)
+          .setSpacing(SeparatorSpacingSize.Small),
+      )
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(footer()),
+      ),
+  );
+
+  return {
+    files,
+    flags: MessageFlags.IsComponentsV2,
+    components,
     allowedMentions: { parse: [] },
   };
 }

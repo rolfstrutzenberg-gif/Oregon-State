@@ -1,64 +1,50 @@
-const fs = require("node:fs");
 const {
-  AttachmentBuilder,
   ContainerBuilder,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder,
   MessageFlags,
-  SeparatorBuilder,
-  SeparatorSpacingSize,
   TextDisplayBuilder,
 } = require("discord.js");
 const { accentColor } = require("../constants/branding");
 const { loadWelcomeConfig } = require("../services/welcome-config");
-
-function buildBannerFiles(config) {
-  if (!config.bannerPath || !fs.existsSync(config.bannerPath)) {
-    return { files: [], bannerUrl: config.bannerUrl || null };
-  }
-
-  const fileName = "welcome-banner.png";
-  return {
-    files: [new AttachmentBuilder(config.bannerPath, { name: fileName })],
-    bannerUrl: `attachment://${fileName}`,
-  };
-}
+const {
+  appendFooterBanner,
+  createMediaAsset,
+  footerText,
+  panelDescription,
+  panelDivider,
+  panelHeading,
+  prependBanner,
+} = require("./panel-style");
 
 function createWelcomePanelMessage() {
   const config = loadWelcomeConfig();
-  const { files, bannerUrl } = buildBannerFiles(config);
-  const components = [];
+  const banner = createMediaAsset({
+    localPath: config.bannerPath,
+    remoteUrl: config.bannerUrl,
+    fileName: "welcome-banner.png",
+  });
+  const files = [...banner.files];
+  const body = new ContainerBuilder().setAccentColor(accentColor);
+  prependBanner(body, banner.url);
 
-  if (bannerUrl) {
-    components.push(
-      new MediaGalleryBuilder().addItems(
-        new MediaGalleryItemBuilder().setURL(bannerUrl),
-      ),
-    );
-  }
-
-  components.push(
-    new ContainerBuilder()
-      .setAccentColor(accentColor)
+  body
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(`### ${config.brandText}`),
-        new TextDisplayBuilder().setContent(config.description),
+        new TextDisplayBuilder().setContent(panelHeading(config.title, config.brandText)),
+        new TextDisplayBuilder().setContent(panelDescription(config.description)),
         new TextDisplayBuilder().setContent(config.subtext),
       )
       .addSeparatorComponents(
-        new SeparatorBuilder()
-          .setDivider(true)
-          .setSpacing(SeparatorSpacingSize.Small),
+        panelDivider({ visible: false }),
       )
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
-      ),
-  );
+        footerText(),
+      );
+
+  appendFooterBanner(body, files);
 
   return {
     files,
     flags: MessageFlags.IsComponentsV2,
-    components,
+    components: [body],
   };
 }
 

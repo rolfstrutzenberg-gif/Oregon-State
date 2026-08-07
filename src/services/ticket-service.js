@@ -62,7 +62,7 @@ async function ensureTicketCategory(guild) {
   });
 }
 
-async function createTicketChannel(interaction, targetUser) {
+async function createTicketChannel(interaction, targetUser, details = {}) {
   const guild = interaction.guild;
   await guild.channels.fetch();
   await guild.roles.fetch();
@@ -124,6 +124,12 @@ async function createTicketChannel(interaction, targetUser) {
     openedByTag: interaction.user.tag,
     targetUserId: targetUser.id,
     targetTag: targetUser.tag,
+    type: details.type || "Staff Ticket",
+    summary: details.summary || null,
+    details: details.details || null,
+    robloxUsername: details.robloxUsername || null,
+    proof: details.proof || null,
+    priority: details.priority || null,
     status: "Open",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
