@@ -127,16 +127,18 @@ async function moveMemberToPendingRules(member) {
   const pendingRulesRole = await ensurePendingRulesRole(member.guild);
   const { verifiedRole, unverifiedRole } = resolveOnboardingRoles(member.guild);
 
-  if (verifiedRole && member.roles.cache.has(verifiedRole.id)) {
-    await member.roles.remove(verifiedRole, "Move member into pending-rules onboarding stage").catch(() => null);
+  if (!verifiedRole) {
+    throw new Error("The Verified Community Member role is missing.");
   }
 
-  if (!member.roles.cache.has(pendingRulesRole.id)) {
-    await member.roles.add(pendingRulesRole, "Verification complete, rules acceptance required");
+  const rolesToAdd = [verifiedRole, pendingRulesRole]
+    .filter((role) => !member.roles.cache.has(role.id));
+  if (rolesToAdd.length > 0) {
+    await member.roles.add(rolesToAdd, "Roblox verified, rules acceptance required");
   }
 
   if (unverifiedRole && member.roles.cache.has(unverifiedRole.id)) {
-    await member.roles.remove(unverifiedRole, "Verification complete, move to rules step").catch(() => null);
+    await member.roles.remove(unverifiedRole, "Roblox verification complete");
   }
 
   return {
@@ -160,11 +162,11 @@ async function grantFullAccess(member) {
   }
 
   if (unverifiedRole && member.roles.cache.has(unverifiedRole.id)) {
-    await member.roles.remove(unverifiedRole, "Rules accepted").catch(() => null);
+    await member.roles.remove(unverifiedRole, "Rules accepted");
   }
 
   if (pendingRulesRole && member.roles.cache.has(pendingRulesRole.id)) {
-    await member.roles.remove(pendingRulesRole, "Rules accepted").catch(() => null);
+    await member.roles.remove(pendingRulesRole, "Rules accepted");
   }
 
   return {

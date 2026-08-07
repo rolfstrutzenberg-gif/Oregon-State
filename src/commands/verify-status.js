@@ -1,5 +1,9 @@
 const { SlashCommandBuilder } = require("discord.js");
 const { findVerificationByDiscordUserId } = require("../services/verification-store");
+const {
+  findAcceptanceByDiscordUserId,
+  isAcceptanceComplete,
+} = require("../services/rules-acceptance-store");
 const { verificationReadiness } = require("../services/verification-config");
 const { replyPanel } = require("../utils/command-response");
 
@@ -16,6 +20,7 @@ module.exports = {
   async execute(interaction) {
     const user = interaction.options.getUser("user") || interaction.user;
     const record = findVerificationByDiscordUserId(user.id);
+    const acceptance = findAcceptanceByDiscordUserId(user.id);
     const readiness = verificationReadiness();
 
     if (!record) {
@@ -37,6 +42,10 @@ module.exports = {
         `> Roblox ID: \`${record.robloxUserId || "Unknown"}\``,
         `> Discord ID: \`${record.discordUserId}\``,
         `> Verified: **${record.verifiedAt ? new Date(record.verifiedAt).toLocaleString() : "Unknown"}**`,
+        `> Last checked: **${record.lastVerifiedAt ? new Date(record.lastVerifiedAt).toLocaleString() : "Unknown"}**`,
+        `> Onboarding: **${record.onboardingStatus || "Unknown"}**`,
+        `> Rules: **${isAcceptanceComplete(acceptance) ? "Accepted" : "Pending"}**`,
+        `> Verification attempts: **${record.verificationCount || 1}**`,
       ],
       tone: "success",
     });

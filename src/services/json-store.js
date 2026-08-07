@@ -21,7 +21,9 @@ function readStore(fileName, fallback = []) {
 
 function writeStore(fileName, value) {
   const filePath = ensureStore(fileName, Array.isArray(value) ? [] : {});
-  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
+  const temporaryPath = `${filePath}.${process.pid}.tmp`;
+  fs.writeFileSync(temporaryPath, `${JSON.stringify(value, null, 2)}\n`);
+  fs.renameSync(temporaryPath, filePath);
 }
 
 module.exports = {

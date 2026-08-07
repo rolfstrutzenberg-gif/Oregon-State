@@ -11,7 +11,10 @@ const {
   moveMemberToPendingRules,
   resolveRulesChannel,
 } = require("./onboarding-service");
-const { findAcceptanceByDiscordUserId } = require("./rules-acceptance-store");
+const {
+  findAcceptanceByDiscordUserId,
+  isAcceptanceComplete,
+} = require("./rules-acceptance-store");
 const { ensureCaseFile, updateCaseFile } = require("./case-file-service");
 const { appendVerificationAuditEvent } = require("./verification-audit-store");
 const { createRulesReferralMessage } = require("../utils/rules-referral-message");
@@ -154,13 +157,12 @@ async function completeVerificationCore(client, payload, context) {
   }
 
   const rulesAcceptance = findAcceptanceByDiscordUserId(member.id);
-  if (rulesAcceptance) {
-    await grantFullAccess(member);
-  } else {
-    await moveMemberToPendingRules(member);
-  }
-
-  const record = saveVerification({
+  const rulesAccepted = isAcceptanceComplete(rulesAcceptance);
+  const now = new Date().toISOString();
+  const eventAlreadyProcessed = Boolean(
+    context.eventId && existingDiscord?.lastEventId === context.eventId,
+  );
+  let record = saveVerification({
     recordVersion: 1,
     guildId: guild.id,
     discordUserId: member.id,
@@ -170,11 +172,36 @@ async function completeVerificationCore(client, payload, context) {
     robloxUserId: String(payload.robloxUserId),
     robloxUsername: String(payload.robloxUsername),
     robloxDisplayName: String(payload.robloxDisplayName),
-    verifiedAt: payload.verifiedAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    provider: "roblox-oauth",
-    onboardingStatus: rulesAcceptance ? "rules-accepted" : "pending-rules",
+    verifiedAt: existingDiscord?.verifiedAt || payload.verifiedAt || now,
+    firstVerifiedAt: existingDiscord?.firstVerifiedAt || existingDiscord?.verifiedAt || payload.verifiedAt || now,
+    lastVerifiedAt: payload.verifiedAt || now,
+    updatedAt: now,
+    provider: payload.provider || "roblox-oauth",
+    onboardingStatus: "role-sync-pending",
+    verificationCount: eventAlreadyProcessed
+      ? Number(existingDiscord?.verificationCount || 1)
+      : Number(existingDiscord?.verificationCount || 0) + 1,
+    lastEventId: context.eventId || existingDiscord?.lastEventId || null,
+    lastSource: context.source,
+    lastError: null,
   });
+
+  try {
+    if (rulesAccepted) {
+      await grantFullAccess(member);
+    } else {
+      await moveMemberToPendingRules(member);
+    }
+  } catch (error) {
+    record = saveVerification({
+      ...record,
+      onboardingStatus: "role-sync-failed",
+      lastError: error.message || "Role synchronization failed.",
+      updatedAt: new Date().toISOString(),
+    });
+    error.statusCode = error.statusCode || 503;
+    throw error;
+  }
 
   ensureCaseFile({
     id: member.id,
@@ -188,6 +215,26 @@ async function completeVerificationCore(client, payload, context) {
     robloxUsername: record.robloxUsername,
   });
 
+  const rulesChannel = resolveRulesChannel(guild);
+  let referralStatus = rulesAccepted ? "not-required" : "rules-channel-missing";
+  if (!rulesAccepted && rulesChannel?.isTextBased()) {
+    try {
+      await member.send(createRulesReferralMessage(member, rulesChannel));
+      referralStatus = "dm-sent";
+    } catch (error) {
+      referralStatus = "dm-failed";
+      logger.info(`Could not DM rules referral to ${member.user.tag}: ${error.message}`);
+    }
+  }
+
+  record = saveVerification({
+    ...record,
+    onboardingStatus: rulesAccepted ? "rules-accepted" : "pending-rules",
+    rulesReferralStatus: referralStatus,
+    rulesReferralAttemptedAt: rulesAccepted ? null : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
   const auditRecord = appendVerificationAuditEvent({
     type: "verification.completed",
     outcome: "success",
@@ -195,13 +242,6 @@ async function completeVerificationCore(client, payload, context) {
     source: context.source,
     ...record,
   });
-
-  const rulesChannel = resolveRulesChannel(guild);
-  if (!rulesAcceptance && rulesChannel?.isTextBased()) {
-    await member.send(createRulesReferralMessage(member, rulesChannel)).catch((error) => {
-      logger.info(`Could not DM rules referral to ${member.user.tag}: ${error.message}`);
-    });
-  }
 
   await sendVerificationLog(
     client,
@@ -301,6 +341,7 @@ function startVerificationCallbackServer(client) {
 module.exports = {
   completeVerification,
   safeSecretEquals,
+  sendVerificationLog,
   startVerificationCallbackServer,
   validatePayload,
 };

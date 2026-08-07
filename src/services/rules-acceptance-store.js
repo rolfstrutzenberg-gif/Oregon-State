@@ -1,29 +1,21 @@
-const fs = require("node:fs");
-const path = require("node:path");
+const { readStore, writeStore } = require("./json-store");
 
-const dataDir = path.join(process.cwd(), "data");
-const storePath = path.join(dataDir, "rules-acceptance.json");
-
-function ensureStore() {
-  fs.mkdirSync(dataDir, { recursive: true });
-
-  if (!fs.existsSync(storePath)) {
-    fs.writeFileSync(storePath, "[]\n");
-  }
-}
+const storeName = "rules-acceptance.json";
 
 function readAllAcceptances() {
-  ensureStore();
-  return JSON.parse(fs.readFileSync(storePath, "utf8"));
+  return readStore(storeName, []);
 }
 
 function writeAllAcceptances(records) {
-  ensureStore();
-  fs.writeFileSync(storePath, `${JSON.stringify(records, null, 2)}\n`);
+  writeStore(storeName, records);
 }
 
 function findAcceptanceByDiscordUserId(discordUserId) {
   return readAllAcceptances().find((record) => record.discordUserId === discordUserId) || null;
+}
+
+function isAcceptanceComplete(record) {
+  return Boolean(record && (!record.status || record.status === "complete"));
 }
 
 function saveAcceptance(record) {
@@ -35,8 +27,8 @@ function saveAcceptance(record) {
 }
 
 module.exports = {
-  ensureStore,
   findAcceptanceByDiscordUserId,
+  isAcceptanceComplete,
   readAllAcceptances,
   saveAcceptance,
 };

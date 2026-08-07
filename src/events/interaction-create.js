@@ -1,11 +1,26 @@
 const { Events, MessageFlags, PermissionFlagsBits } = require("discord.js");
-const { findAcceptanceByDiscordUserId, saveAcceptance } = require("../services/rules-acceptance-store");
-const { findVerificationByDiscordUserId } = require("../services/verification-store");
+const {
+  findAcceptanceByDiscordUserId,
+  isAcceptanceComplete,
+  saveAcceptance,
+} = require("../services/rules-acceptance-store");
+const {
+  findVerificationByDiscordUserId,
+  updateVerificationByDiscordUserId,
+} = require("../services/verification-store");
 const {
   VERIFICATION_START_BUTTON_ID,
   createVerificationLaunchMessage,
 } = require("../utils/verification-flow");
-const { grantFullAccess } = require("../services/onboarding-service");
+const {
+  grantFullAccess,
+  moveMemberToPendingRules,
+  resolveRulesChannel,
+} = require("../services/onboarding-service");
+const { appendVerificationAuditEvent } = require("../services/verification-audit-store");
+const { sendVerificationLog } = require("../services/verification-callback-server");
+const { createRulesAcceptanceLog } = require("../utils/verification-log-message");
+const { createRulesReferralMessage } = require("../utils/rules-referral-message");
 const { canApply } = require("../services/application-eligibility-service");
 const {
   createStaffApplication,
@@ -1196,6 +1211,31 @@ module.exports = {
       }
 
       try {
+        const verification = findVerificationByDiscordUserId(interaction.user.id);
+        if (verification) {
+          const acceptance = findAcceptanceByDiscordUserId(interaction.user.id);
+          if (isAcceptanceComplete(acceptance)) {
+            await grantFullAccess(interaction.member);
+            updateVerificationByDiscordUserId(interaction.user.id, {
+              onboardingStatus: "rules-accepted",
+              lastError: null,
+            });
+            await interaction.editReply({
+              content: "Your Roblox account is verified and your server access is active.",
+              components: [],
+            });
+            return;
+          }
+
+          await moveMemberToPendingRules(interaction.member);
+          const rulesChannel = resolveRulesChannel(interaction.guild);
+          if (!rulesChannel?.isTextBased()) {
+            throw new Error("The rules channel is not configured.");
+          }
+          await interaction.editReply(createRulesReferralMessage(interaction.member, rulesChannel));
+          return;
+        }
+
         await interaction.editReply(
           createVerificationLaunchMessage({
             discordUserId: interaction.user.id,
@@ -1239,20 +1279,25 @@ module.exports = {
         return;
       }
 
+      await interaction.deferReply({ ephemeral: true });
+
       const verification = findVerificationByDiscordUserId(interaction.user.id);
       if (!verification) {
-        await interaction.reply({
+        await interaction.editReply({
           content: "You need to verify first before accepting the rules.",
-          ephemeral: true,
         });
         return;
       }
 
       const existingAcceptance = findAcceptanceByDiscordUserId(interaction.user.id);
-      if (existingAcceptance) {
-        await interaction.deferReply({ ephemeral: true });
+      if (isAcceptanceComplete(existingAcceptance)) {
         try {
           await grantFullAccess(interaction.member);
+          updateVerificationByDiscordUserId(interaction.user.id, {
+            onboardingStatus: "rules-accepted",
+            rulesAcceptedAt: existingAcceptance.acceptedAt || existingAcceptance.completedAt || null,
+            lastError: null,
+          });
           await interaction.editReply(
             "You already accepted the rules. Your server access has been checked and repaired.",
           );
@@ -1265,25 +1310,76 @@ module.exports = {
         return;
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      const attemptedAt = new Date().toISOString();
+      const pendingAcceptance = saveAcceptance({
+        ...existingAcceptance,
+        recordVersion: 1,
+        discordUserId: interaction.user.id,
+        discordUsername: interaction.user.username,
+        discordTag: interaction.user.tag,
+        discordDisplayName: interaction.member.displayName,
+        acceptedInGuildId: interaction.guildId,
+        robloxUserId: verification.robloxUserId,
+        robloxUsername: verification.robloxUsername,
+        attemptedAt,
+        status: "role-sync-pending",
+        lastError: null,
+      });
 
-      const member = interaction.member;
       try {
-        await grantFullAccess(member);
+        await grantFullAccess(interaction.member);
       } catch (error) {
+        const failedAcceptance = saveAcceptance({
+          ...pendingAcceptance,
+          status: "role-sync-failed",
+          lastError: error.message || "Role synchronization failed.",
+          updatedAt: new Date().toISOString(),
+        });
+        const audit = appendVerificationAuditEvent({
+          type: "rules.acceptance_failed",
+          outcome: "failure",
+          source: "discord-interaction",
+          ...failedAcceptance,
+          error: failedAcceptance.lastError,
+        });
+        await sendVerificationLog(
+          interaction.client,
+          interaction.guildId,
+          createRulesAcceptanceLog(audit),
+        ).catch((logError) => logger.error("Could not post rules failure log.", logError));
         logger.error("Failed to grant full access after rules acceptance.", error);
         await interaction.editReply(
-          "Your acceptance could not be completed because the Verified role is missing or the bot cannot assign it. The error has been logged for staff.",
+          "Your rules acceptance was saved, but access could not be updated. Try the button again. If it still fails, open a support ticket.",
         );
         return;
       }
 
-      saveAcceptance({
-        discordUserId: interaction.user.id,
-        discordTag: interaction.user.tag,
-        acceptedAt: new Date().toISOString(),
-        acceptedInGuildId: interaction.guildId,
+      const acceptedAt = new Date().toISOString();
+      const acceptance = saveAcceptance({
+        ...pendingAcceptance,
+        acceptedAt,
+        completedAt: acceptedAt,
+        updatedAt: acceptedAt,
+        status: "complete",
+        lastError: null,
       });
+      updateVerificationByDiscordUserId(interaction.user.id, {
+        onboardingStatus: "rules-accepted",
+        rulesAcceptedAt: acceptedAt,
+        lastError: null,
+      });
+
+      const audit = appendVerificationAuditEvent({
+        type: "rules.accepted",
+        outcome: "success",
+        source: "discord-interaction",
+        ...acceptance,
+      });
+      await sendVerificationLog(
+        interaction.client,
+        interaction.guildId,
+        createRulesAcceptanceLog(audit),
+      ).catch((error) => logger.error("Could not post rules acceptance log.", error));
 
       await interaction.editReply({
         content: "Rules accepted. You now have full access to the server.",

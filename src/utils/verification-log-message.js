@@ -89,7 +89,42 @@ function createVerificationFailureLog(event) {
   };
 }
 
+function createRulesAcceptanceLog(event) {
+  const succeeded = event.outcome === "success";
+  return {
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] },
+    components: [
+      new ContainerBuilder()
+        .setAccentColor(succeeded ? accentColor : failureColor)
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            succeeded ? "### Rules Accepted" : "### Rules Acceptance Failed",
+          ),
+          new TextDisplayBuilder().setContent(
+            [
+              `> Discord: <@${event.discordUserId}> (${safe(event.discordUserId)})`,
+              `> Roblox: **${safe(event.robloxUsername)}** (${safe(event.robloxUserId)})`,
+              `> Result: **${succeeded ? "Server access granted" : safe(event.error)}**`,
+            ].join("\n"),
+          ),
+        )
+        .addSeparatorComponents(
+          new SeparatorBuilder()
+            .setDivider(false)
+            .setSpacing(SeparatorSpacingSize.Small),
+        )
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `-# Rules onboarding • ${timestamp(event.occurredAt || event.acceptedAt)} • Audit ${event.auditId || "recorded"}`,
+          ),
+        ),
+    ],
+  };
+}
+
 module.exports = {
   createVerificationFailureLog,
   createVerificationSuccessLog,
+  createRulesAcceptanceLog,
 };

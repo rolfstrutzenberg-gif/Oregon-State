@@ -1,25 +1,13 @@
-const fs = require("node:fs");
-const path = require("node:path");
+const { readStore, writeStore } = require("./json-store");
 
-const dataDir = path.join(process.cwd(), "data");
-const storePath = path.join(dataDir, "verifications.json");
-
-function ensureStore() {
-  fs.mkdirSync(dataDir, { recursive: true });
-
-  if (!fs.existsSync(storePath)) {
-    fs.writeFileSync(storePath, "[]\n");
-  }
-}
+const storeName = "verifications.json";
 
 function readAllVerifications() {
-  ensureStore();
-  return JSON.parse(fs.readFileSync(storePath, "utf8"));
+  return readStore(storeName, []);
 }
 
 function writeAllVerifications(records) {
-  ensureStore();
-  fs.writeFileSync(storePath, `${JSON.stringify(records, null, 2)}\n`);
+  writeStore(storeName, records);
 }
 
 function findVerificationByDiscordUserId(discordUserId) {
@@ -40,10 +28,26 @@ function saveVerification(record) {
   return record;
 }
 
+function updateVerificationByDiscordUserId(discordUserId, patch) {
+  const records = readAllVerifications();
+  const index = records.findIndex((entry) => entry.discordUserId === discordUserId);
+  if (index === -1) {
+    return null;
+  }
+
+  records[index] = {
+    ...records[index],
+    ...patch,
+    updatedAt: patch.updatedAt || new Date().toISOString(),
+  };
+  writeAllVerifications(records);
+  return records[index];
+}
+
 module.exports = {
-  ensureStore,
   findVerificationByDiscordUserId,
   findVerificationByRobloxUserId,
   readAllVerifications,
   saveVerification,
+  updateVerificationByDiscordUserId,
 };
