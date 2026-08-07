@@ -20,7 +20,7 @@ module.exports = {
       return;
     }
 
-    const panel = createVerificationPanelMessage();
+    const panel = createVerificationPanelMessage({ guildId: targetChannel.guildId });
 
     await targetChannel.send({
       components: panel.components,

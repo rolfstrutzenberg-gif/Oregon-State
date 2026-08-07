@@ -2,6 +2,16 @@ const { panelBanner } = require("../constants/panel-banners");
 
 function loadVerificationConfig() {
   const banner = panelBanner("verification");
+  const verifyPortalUrl = process.env.VERIFY_PORTAL_URL || null;
+  let verifySiteUrl = process.env.VERIFICATION_SITE_URL || null;
+  if (!verifySiteUrl && verifyPortalUrl) {
+    try {
+      verifySiteUrl = new URL("/", verifyPortalUrl).toString();
+    } catch {
+      verifySiteUrl = null;
+    }
+  }
+
   return {
     verifyChannelId: process.env.VERIFY_CHANNEL_ID || null,
     verifyLogChannelId: process.env.VERIFY_LOG_CHANNEL_ID || null,
@@ -13,7 +23,9 @@ function loadVerificationConfig() {
     verifyBrandText: process.env.VERIFY_BRAND_TEXT || "OSRP",
     verifyPanelTitle: process.env.VERIFY_PANEL_TITLE || "Verification",
     verifyPanelButtonText: process.env.VERIFY_PANEL_BUTTON_TEXT || "Start Verification",
-    verifyPortalUrl: process.env.VERIFY_PORTAL_URL || null,
+    verifyPortalUrl,
+    verifySiteUrl,
+    supportChannelId: process.env.SUPPORT_CHANNEL_ID || null,
     callbackSecret: process.env.BOT_VERIFICATION_CALLBACK_SECRET || null,
     callbackPort: Number(process.env.VERIFICATION_CALLBACK_PORT || 3001),
     relayUrl: process.env.VERIFICATION_RELAY_URL || null,

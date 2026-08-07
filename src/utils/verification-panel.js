@@ -1,4 +1,5 @@
 const {
+  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   ContainerBuilder,
@@ -18,13 +19,17 @@ const {
   prependBanner,
 } = require("./panel-style");
 
-function createVerificationPanelMessage() {
+function discordChannelUrl(guildId, channelId) {
+  return `https://discord.com/channels/${guildId}/${channelId}`;
+}
+
+function createVerificationPanelMessage({ guildId = process.env.GUILD_ID } = {}) {
   const config = loadVerificationConfig();
   const readiness = verificationReadiness(config);
   const banner = createMediaAsset({
     localPath: config.verifyBannerPath,
     remoteUrl: config.verifyBannerUrl,
-    fileName: "verification-banner.png",
+    fileName: "osrp-verification-banner-v2.png",
   });
   const isReady = Boolean(config.verifyPortalUrl && config.callbackSecret);
   const button = isReady
@@ -37,6 +42,23 @@ function createVerificationPanelMessage() {
       .setLabel("Verification Setup Pending")
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(true);
+  const links = [];
+  if (config.verifySiteUrl) {
+    links.push(
+      new ButtonBuilder()
+        .setLabel("Verification Page")
+        .setStyle(ButtonStyle.Link)
+        .setURL(config.verifySiteUrl),
+    );
+  }
+  if (guildId && config.supportChannelId) {
+    links.push(
+      new ButtonBuilder()
+        .setLabel("Get Support")
+        .setStyle(ButtonStyle.Link)
+        .setURL(discordChannelUrl(guildId, config.supportChannelId)),
+    );
+  }
 
   const body = new ContainerBuilder().setAccentColor(accentColor);
   prependBanner(body, banner.url);
@@ -45,7 +67,7 @@ function createVerificationPanelMessage() {
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(panelHeading(config.verifyPanelTitle, config.verifyBrandText)),
       new TextDisplayBuilder().setContent(
-        panelDescription("Link your Roblox account before entering the rest of the server."),
+        panelDescription("Connect your Roblox account to unlock Oregon State Roleplay."),
       ),
     )
     .addSeparatorComponents(
@@ -55,21 +77,29 @@ function createVerificationPanelMessage() {
       new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            isReady ? "## Start Verification" : "## Verification Unavailable",
+            isReady ? "## Verify Your Account" : "## Verification Unavailable",
           ),
           new TextDisplayBuilder().setContent(
             isReady
-              ? "Continue through Roblox, then return to Discord."
-              : "Staff are finishing the Roblox connection. Check back shortly.",
+              ? "Press the button to continue through Roblox. Once complete, return to Discord and accept the rules."
+              : "The Roblox connection is temporarily unavailable. Please try again shortly.",
           ),
         )
         .setButtonAccessory(button),
-    )
+    );
+
+  if (links.length > 0) {
+    body.addActionRowComponents(
+      new ActionRowBuilder().addComponents(links),
+    );
+  }
+
+  body
     .addSeparatorComponents(
       panelDivider({ visible: false }),
     )
     .addTextDisplayComponents(
-      footerText(),
+      footerText("Official Roblox verification"),
     );
 
   return {
@@ -79,6 +109,8 @@ function createVerificationPanelMessage() {
     readiness: {
       ...readiness,
       hasPortalUrl: Boolean(config.verifyPortalUrl),
+      hasSiteUrl: Boolean(config.verifySiteUrl),
+      hasSupportChannel: Boolean(guildId && config.supportChannelId),
       isReady,
     },
   };
