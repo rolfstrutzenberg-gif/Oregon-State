@@ -43,7 +43,10 @@ async function reportResult(config, eventId, action, body) {
 
 async function processClaimedEvent(client, config, event) {
   try {
-    await completeVerification(client, event.payload);
+    await completeVerification(client, event.payload, {
+      eventId: event.id,
+      source: "cloudflare-relay",
+    });
     await reportResult(config, event.id, "complete");
     logger.info(`Completed verification event ${event.id}.`);
   } catch (error) {

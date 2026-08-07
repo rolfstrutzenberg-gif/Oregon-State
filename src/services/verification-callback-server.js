@@ -12,7 +12,13 @@ const {
   resolveRulesChannel,
 } = require("./onboarding-service");
 const { findAcceptanceByDiscordUserId } = require("./rules-acceptance-store");
+const { ensureCaseFile, updateCaseFile } = require("./case-file-service");
+const { appendVerificationAuditEvent } = require("./verification-audit-store");
 const { createRulesReferralMessage } = require("../utils/rules-referral-message");
+const {
+  createVerificationFailureLog,
+  createVerificationSuccessLog,
+} = require("../utils/verification-log-message");
 const { createLogger } = require("../utils/logger");
 
 const logger = createLogger("verification-callback");
@@ -83,7 +89,40 @@ function resolveVerifyLogChannel(guild, configuredId) {
   ) || null;
 }
 
-async function completeVerification(client, payload) {
+async function sendVerificationLog(client, guildId, message) {
+  if (!guildId) {
+    return false;
+  }
+
+  const guild = await client.guilds.fetch(guildId).catch(() => null);
+  if (!guild) {
+    return false;
+  }
+
+  await guild.channels.fetch().catch(() => null);
+  const config = loadVerificationConfig();
+  const logChannel = resolveVerifyLogChannel(guild, config.verifyLogChannelId);
+  if (!logChannel) {
+    logger.info("Verification log channel could not be resolved.");
+    return false;
+  }
+
+  await logChannel.send(message);
+  return true;
+}
+
+function auditIdentity(payload) {
+  return {
+    discordUserId: payload?.discordUserId ? String(payload.discordUserId) : null,
+    guildId: payload?.guildId ? String(payload.guildId) : null,
+    robloxUserId: payload?.robloxUserId ? String(payload.robloxUserId) : null,
+    robloxUsername: payload?.robloxUsername ? String(payload.robloxUsername) : null,
+    robloxDisplayName: payload?.robloxDisplayName ? String(payload.robloxDisplayName) : null,
+    provider: payload?.provider ? String(payload.provider) : "roblox-oauth",
+  };
+}
+
+async function completeVerificationCore(client, payload, context) {
   validatePayload(payload);
 
   if (process.env.GUILD_ID && payload.guildId !== process.env.GUILD_ID) {
@@ -122,13 +161,39 @@ async function completeVerification(client, payload) {
   }
 
   const record = saveVerification({
+    recordVersion: 1,
+    guildId: guild.id,
     discordUserId: member.id,
+    discordUsername: member.user.username,
+    discordDisplayName: member.displayName,
     discordTag: member.user.tag,
     robloxUserId: String(payload.robloxUserId),
     robloxUsername: String(payload.robloxUsername),
     robloxDisplayName: String(payload.robloxDisplayName),
     verifiedAt: payload.verifiedAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     provider: "roblox-oauth",
+    onboardingStatus: rulesAcceptance ? "rules-accepted" : "pending-rules",
+  });
+
+  ensureCaseFile({
+    id: member.id,
+    username: member.user.username,
+    tag: member.user.tag,
+    displayName: member.displayName,
+    bot: member.user.bot,
+  });
+  updateCaseFile(member.id, {
+    robloxUserId: record.robloxUserId,
+    robloxUsername: record.robloxUsername,
+  });
+
+  const auditRecord = appendVerificationAuditEvent({
+    type: "verification.completed",
+    outcome: "success",
+    eventId: context.eventId || null,
+    source: context.source,
+    ...record,
   });
 
   const rulesChannel = resolveRulesChannel(guild);
@@ -138,20 +203,54 @@ async function completeVerification(client, payload) {
     });
   }
 
-  const config = loadVerificationConfig();
-  const logChannel = resolveVerifyLogChannel(guild, config.verifyLogChannelId);
-  if (logChannel) {
-    await logChannel.send({
-      content: [
-        `**Verification Complete** • <@${member.id}>`,
-        `Roblox: **${record.robloxUsername}** (${record.robloxUserId})`,
-        `Status: ${rulesAcceptance ? "Verified access confirmed" : "Pending rules acceptance"}`,
-      ].join("\n"),
-      allowedMentions: { parse: [] },
-    }).catch(() => null);
-  }
+  await sendVerificationLog(
+    client,
+    guild.id,
+    createVerificationSuccessLog({ ...record, auditId: auditRecord.auditId }),
+  ).catch((error) => logger.error("Could not post verification success log.", error));
 
   return record;
+}
+
+async function completeVerification(client, payload, context = {}) {
+  const normalizedContext = {
+    eventId: context.eventId || null,
+    source: context.source || "direct-callback",
+  };
+
+  try {
+    return await completeVerificationCore(client, payload, normalizedContext);
+  } catch (error) {
+    let auditRecord;
+    try {
+      auditRecord = appendVerificationAuditEvent({
+        type: "verification.failed",
+        outcome: "failure",
+        eventId: normalizedContext.eventId,
+        source: normalizedContext.source,
+        ...auditIdentity(payload),
+        statusCode: Number(error.statusCode) || 500,
+        error: error.message || "Verification processing failed.",
+      });
+    } catch (auditError) {
+      logger.error("Could not persist verification failure audit.", auditError);
+      auditRecord = {
+        occurredAt: new Date().toISOString(),
+        eventId: normalizedContext.eventId,
+        source: normalizedContext.source,
+        ...auditIdentity(payload),
+        statusCode: Number(error.statusCode) || 500,
+        error: error.message || "Verification processing failed.",
+      };
+    }
+
+    await sendVerificationLog(
+      client,
+      payload?.guildId,
+      createVerificationFailureLog(auditRecord),
+    ).catch((logError) => logger.error("Could not post verification failure log.", logError));
+    throw error;
+  }
 }
 
 function startVerificationCallbackServer(client) {
@@ -180,7 +279,7 @@ function startVerificationCallbackServer(client) {
 
     try {
       const payload = await readJsonBody(request);
-      const record = await completeVerification(client, payload);
+      const record = await completeVerification(client, payload, { source: "direct-callback" });
       sendJson(response, 200, {
         ok: true,
         discordUserId: record.discordUserId,
