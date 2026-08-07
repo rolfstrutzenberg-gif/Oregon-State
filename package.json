@@ -14,6 +14,7 @@
     "import:channels": "node scripts/import-channel-matrix.js",
     "casefiles:backfill": "node scripts/backfill-case-files.js",
     "permissions:unverified": "node scripts/enforce-unverified-visibility.js",
+    "panels:repost": "node scripts/repost-panels.js --apply",
     "snapshot:guild": "node scripts/snapshot-guild.js",
     "restore:guild": "node scripts/restore-guild.js"
   },

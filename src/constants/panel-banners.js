@@ -48,9 +48,14 @@ const bannerSlots = {
     urlEnv: "STAFF_APPLICATION_BANNER_URL",
   },
   staff_dashboard: {
-    fileName: "staff-dashboard.png",
+    fileName: "case-files.png",
     pathEnv: "STAFF_DASHBOARD_BANNER_PATH",
     urlEnv: "STAFF_DASHBOARD_BANNER_URL",
+  },
+  case_files: {
+    fileName: "case-files.png",
+    pathEnv: "CASE_FILES_BANNER_PATH",
+    urlEnv: "CASE_FILES_BANNER_URL",
   },
 };
 

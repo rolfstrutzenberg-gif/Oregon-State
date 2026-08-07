@@ -107,7 +107,7 @@ const panelDefinitions = {
     note: "Every action should have a reason. If it would look bad in a log, do not do it.",
     buttons: [
       { label: "Cases", env: "CASES_CHANNEL_ID", names: ["📁｜cases"] },
-      { label: "Case Files", env: "CASE_FILES_CHANNEL_ID", names: ["📂｜case-files", "📁｜case-files"] },
+      { label: "Case Files", env: "CASE_FILES_CHANNEL_ID", names: ["🗂️｜case-files", "📂｜case-files", "📁｜case-files"] },
       { label: "Game Logs", env: "GAME_LOGS_CHANNEL_ID", names: ["🎮｜game-logs"] },
     ],
   },

@@ -12,6 +12,12 @@ const {
   TextInputStyle,
 } = require("discord.js");
 const { accentColor } = require("../constants/branding");
+const { panelBanner } = require("../constants/panel-banners");
+const {
+  createMediaAsset,
+  panelDivider,
+  prependBanner,
+} = require("./panel-style");
 
 const CASE_DASHBOARD_SEARCH_ID = "casefiles:search";
 const CASE_DASHBOARD_SEARCH_MODAL_ID = "casefiles:search-modal";
@@ -41,58 +47,63 @@ const CASE_FILE_APPROVE_PREFIX = "casefile:approve:";
 const CASE_FILE_DENY_PREFIX = "casefile:deny:";
 
 function createCaseFilesDashboardMessage() {
+  const bannerDefinition = panelBanner("case_files");
+  const banner = createMediaAsset({
+    localPath: bannerDefinition.localPath,
+    fallbackLocalPath: bannerDefinition.fallbackLocalPath,
+    remoteUrl: bannerDefinition.remoteUrl,
+    fileName: bannerDefinition.attachmentName,
+  });
+  const body = new ContainerBuilder().setAccentColor(accentColor);
+  prependBanner(body, banner.url);
+
+  body
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent("### OSRP | Case Files"),
+      new TextDisplayBuilder().setContent("Search records, log incidents, and review private case file access."),
+    )
+    .addSeparatorComponents(panelDivider())
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(CASE_DASHBOARD_SEARCH_ID)
+          .setLabel("Search User")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(CASE_DASHBOARD_ROLE_ID)
+          .setLabel("Search Role")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(CASE_DASHBOARD_LOG_ID)
+          .setLabel("Log Incident")
+          .setStyle(ButtonStyle.Primary),
+      ),
+    )
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(CASE_DASHBOARD_RECENT_ID)
+          .setLabel("Recent Cases")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(CASE_DASHBOARD_REQUESTS_ID)
+          .setLabel("Access Requests")
+          .setStyle(ButtonStyle.Secondary),
+      ),
+    )
+    .addSeparatorComponents(
+      new SeparatorBuilder()
+        .setDivider(false)
+        .setSpacing(SeparatorSpacingSize.Small),
+    )
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
+    );
+
   return {
+    files: banner.files,
     flags: MessageFlags.IsComponentsV2,
-    components: [
-      new ContainerBuilder()
-        .setAccentColor(accentColor)
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("### OSRP"),
-          new TextDisplayBuilder().setContent("## Case Files"),
-          new TextDisplayBuilder().setContent("Search records, log incidents, and review private case file access."),
-        )
-        .addSeparatorComponents(
-          new SeparatorBuilder()
-            .setDivider(true)
-            .setSpacing(SeparatorSpacingSize.Small),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(CASE_DASHBOARD_SEARCH_ID)
-              .setLabel("Search User")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(CASE_DASHBOARD_ROLE_ID)
-              .setLabel("Search Role")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(CASE_DASHBOARD_LOG_ID)
-              .setLabel("Log Incident")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(CASE_DASHBOARD_RECENT_ID)
-              .setLabel("Recent Cases")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(CASE_DASHBOARD_REQUESTS_ID)
-              .setLabel("Access Requests")
-              .setStyle(ButtonStyle.Secondary),
-          ),
-        )
-        .addSeparatorComponents(
-          new SeparatorBuilder()
-            .setDivider(false)
-            .setSpacing(SeparatorSpacingSize.Small),
-        )
-        .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("-# Oregon State Roleplay • EST 2026"),
-        ),
-    ],
+    components: [body],
   };
 }
 
